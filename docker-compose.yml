@@ -10,7 +10,7 @@ services:
     environment:
       - FLASK_ENV=development
 
-  flutter_web:
+  react_web:
     build:
       context: ./app/web
       dockerfile: Dockerfile
