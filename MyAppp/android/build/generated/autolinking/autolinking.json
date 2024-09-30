@@ -1,6 +1,6 @@
 {
-  "root": "/home/avittenet/delivery/B-DEV-500-MAR-5-1-area-noam.bouriche/MyApp",
-  "reactNativePath": "/home/avittenet/delivery/B-DEV-500-MAR-5-1-area-noam.bouriche/MyApp/node_modules/react-native",
+  "root": "/home/avittenet/delivery/B-DEV-500-MAR-5-1-area-noam.bouriche/MyAppp",
+  "reactNativePath": "/home/avittenet/delivery/B-DEV-500-MAR-5-1-area-noam.bouriche/MyAppp/node_modules/react-native",
   "reactNativeVersion": "0.75",
   "dependencies": {},
   "commands": [
@@ -164,7 +164,7 @@
         {
           "name": "--path <path>",
           "description": "Path to the React Native project root.",
-          "default": "/home/avittenet/delivery/B-DEV-500-MAR-5-1-area-noam.bouriche/MyApp"
+          "default": "/home/avittenet/delivery/B-DEV-500-MAR-5-1-area-noam.bouriche/MyAppp"
         },
         {
           "name": "--platform <string>",
@@ -451,7 +451,7 @@
   "assets": [],
   "project": {
     "ios": {
-      "sourceDir": "/home/avittenet/delivery/B-DEV-500-MAR-5-1-area-noam.bouriche/MyApp/ios",
+      "sourceDir": "/home/avittenet/delivery/B-DEV-500-MAR-5-1-area-noam.bouriche/MyAppp/ios",
       "xcodeProject": {
         "name": "MyApp.xcodeproj",
         "path": ".",
@@ -460,7 +460,7 @@
       "assets": []
     },
     "android": {
-      "sourceDir": "/home/avittenet/delivery/B-DEV-500-MAR-5-1-area-noam.bouriche/MyApp/android",
+      "sourceDir": "/home/avittenet/delivery/B-DEV-500-MAR-5-1-area-noam.bouriche/MyAppp/android",
       "appName": "app",
       "packageName": "com.myapp",
       "applicationId": "com.myapp",
