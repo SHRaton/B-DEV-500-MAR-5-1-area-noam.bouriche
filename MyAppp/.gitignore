@@ -1,0 +1,19 @@
+# React Native
+node_modules/
+android/.gradle/
+android/app/build/
+ios/build/
+ios/Pods/
+ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+ios/*.xcuserdatad/
+*.swp
+*.lock
+*.log
+*.tmp
+*.jks
+
+# macOS
+.DS_Store
+
+# Expo
+.expo/
