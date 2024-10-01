@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const LoginScreen = () => {
@@ -21,10 +21,10 @@ const LoginScreen = () => {
           password: password,
         }),
       });
-  
+
       const data = await response.json();
       console.log('Réponse du serveur:', data);
-  
+
       if (data.authenticated) {
         router.push('/home');
       } else {
@@ -34,40 +34,54 @@ const LoginScreen = () => {
       console.error('Erreur lors de la connexion:', error);
     }
   };
-  
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Connexion</Text>
-      
-      {/* Affiche un message d'erreur si la connexion échoue */}
-      {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+    <View style={styles.containerMain}>
+      {Platform.OS === 'web' && <View style={styles.leftBar}></View>}
+      <View style={styles.container}>
+        <Text style={styles.title}>Connexion</Text>
+        {/* Affiche un message d'erreur si la connexion échoue */}
+        {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Mot de passe"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <Button title="Se connecter" onPress={handleLogin} />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Mot de passe"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+        <Button title="Se connecter" onPress={handleLogin} />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  containerMain: {
+    display: 'flex',
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  leftBar: {
+    backgroundColor: '#594F48',
+    borderTopEndRadius: 300,
+    width: '50%',
+    height: '100%',
+  },
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     padding: 20,
+    marginTop: 200,
   },
   title: {
     fontSize: 24,
