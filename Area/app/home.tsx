@@ -53,11 +53,11 @@ const HomeScreen = () => {
           resizeMode="contain" // Optionnel, pour s'assurer que l'image est redimensionnée correctement
         />
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.buttonAreas} onPress={() => router.push('/login')}>
+          <TouchableOpacity style={styles.buttonAreas} onPress={() => router.push('/my_areas')}>
             <Text style={styles.buttonText}>My Areas</Text>
           </TouchableOpacity>
           <View style={styles.spacing}></View>
-          <TouchableOpacity style={styles.buttonAddArea} onPress={() => router.push('/register')}>
+          <TouchableOpacity style={styles.buttonAddArea} onPress={() => router.push('/add_area')}>
             <Text style={styles.buttonText}>Add Area</Text>
           </TouchableOpacity>
         </View>

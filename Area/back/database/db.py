@@ -18,9 +18,28 @@ def init_db():
         )
     ''')
 
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS areas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        name TEXT NOT NULL,
+        description TEXT,
+        reaction_1 TEXT,
+        reaction_2 TEXT,
+        reaction_3 TEXT,
+        reaction_4 TEXT,
+        reaction_5 TEXT,
+        reaction_6 TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    ''')
+
     conn.commit()
     cursor.close()
     conn.close()
 
+    
 if __name__ == '__main__':
     init_db()  # Exécuter cette fonction pour initialiser la base de données
+    print('Database initialized.')  # Message de confirmation
+    print(DB_PATH)
