@@ -17,6 +17,7 @@ class DataStruct:
         self.lang = "FR"
         #discord api data
         self.discord_mess = "caca proute structure"
+        self.user_to_detect = 694509368904777748
         self.channel_id = 1100402907247038487
         self.TOKEN_discord = 'MTI4ODU2OTYzNTU3NDM4NjY4OA.GnlT7O.Zfz1WpwdRacb2tREqgjpt8pAZlqa1CoTVPKw88'
         #spotify api data
@@ -44,23 +45,49 @@ class DataStruct:
                 print("Canal non trouvé.")
         client.run(self.TOKEN_discord)
 
+    def detect_user_messages(self):
+
+        self.user_to_detect = int(self.user_to_detect)
+
+        intents = discord.Intents.default()
+        intents.message_content = True
+        class MyClient(discord.Client):
+            async def on_ready(self):
+                print(f'Connecté en tant que {self.user}')
+
+            async def on_message(self, message):
+
+                if message.author.id == self.user_to_detect:
+                    print(f"Message de {message.author}: {message.content}")
+                    return True
+                else:
+                    return False
+
+        client = MyClient(intents=intents)
+        client.run(self.TOKEN_discord)
+
+
     def get_trigger_n(self):
-        self.trigger_n = 1
+        self.trigger_n = 3
         return self.trigger_n
 
     def get_react_n(self):
-        self.react_n = 3
+        self.react_n = 1
         return self.react_n
 
     def trigger_react(self):
 
-        if self.trigger_n == 1 and check_btc_increase(0) == False:
+        if self.trigger_n == 1 and check_btc_increase(0) == True: #btc is increasing
             if self.react_n == 1:
                 print(translate_to(self.text, self.lang))
             elif self.react_n == 2:
                 self.send_message()
             elif self.react_n == 3:
                 print(get_user_playlists())
+            elif self.react_n == 4:
+                print(get_top_tracks(self.user_id))
+            elif self.react_n == 5:
+                print("barmitzvah")
 
         if self.trigger_n == 2 and is_streaming(self.streamer_name, self.client_id_twitch, self.client_secret_twitch, self.token_twitch) == True: #twitch is streaming
             if self.react_n == 1:
@@ -69,15 +96,19 @@ class DataStruct:
                 self.send_message()
             elif self.react_n == 3:
                 print(get_user_playlists())
+            elif self.react_n == 4:
+                print(get_top_tracks(self.user_id))
 
-
-        if self.trigger_n == 3:
+        if self.trigger_n == 3 and self.detect_user_messages(self) : #discord message by user
             if self.react_n == 1:
                 print(translate_to(self.text, self.lang))
             elif self.react_n == 2:
                 self.send_message()
             elif self.react_n == 3:
                 print(get_user_playlists())
+            elif self.react_n == 4:
+                print(get_top_tracks(self.user_id))
+
 
         elif not (1 <= self.trigger_n <= 5):
             print("Invalid trigger number")
@@ -97,3 +128,7 @@ if __name__ == '__main__':
 # self.lang = langue de traduction
 # self.discord_mess = message a envoyer
 #assigner 1à X , numero reaction, string avec tous les arguments
+
+# trigger 1 = btc increase
+# trigger 2 = twitch streaming
+# trigger 3 = discord message

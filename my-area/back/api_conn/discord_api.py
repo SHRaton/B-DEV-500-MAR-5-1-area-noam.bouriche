@@ -1,6 +1,9 @@
 import discord
 from main import DataStruct
 
+channel_id = 1100402907247038487
+TOKEN_discord = 'MTI4ODU2OTYzNTU3NDM4NjY4OA.GnlT7O.Zfz1WpwdRacb2tREqgjpt8pAZlqa1CoTVPKw88'
+
 # discord API key (tkt les clés)
 self = DataStruct()
 message =  self.text
@@ -26,3 +29,30 @@ def send_message(self):
             print("Canal non trouvé.")
 
     client.run(TOKEN_discord)
+
+
+def detect_user_messages(user_id, token):
+
+    user_id = int(user_id)
+
+    intents = discord.Intents.default()
+    intents.message_content = True
+
+    class MyClient(discord.Client):
+        async def on_ready(self):
+            print(f'Connecté en tant que {self.user}')
+
+        async def on_message(self, message):
+
+            if message.author.id == user_id:
+                print(f"Message de {message.author}: {message.content}")
+                return True
+            else:
+                return False
+
+    client = MyClient(intents=intents)
+    client.run(token)
+
+
+# Utilisation de la fonction
+#detect_user_messages(694509368904777748, 'MTI4ODU2OTYzNTU3NDM4NjY4OA.GnlT7O.Zfz1WpwdRacb2tREqgjpt8pAZlqa1CoTVPKw88')
