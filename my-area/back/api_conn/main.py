@@ -13,10 +13,10 @@ class DataStruct:
         self.trigger_n = 2
         self.react_n = 1
         #deeple api data
-        self.text = "Hello, how are you?"
+        self.text = "reaction DeepL"
         self.lang = "FR"
         #discord api data
-        self.discord_mess = "caca proute structure"
+        self.discord_mess = "reaction discord"
         self.user_to_detect = 694509368904777748
         self.channel_id = 1100402907247038487
         self.TOKEN_discord = 'MTI4ODU2OTYzNTU3NDM4NjY4OA.GnlT7O.Zfz1WpwdRacb2tREqgjpt8pAZlqa1CoTVPKw88'
@@ -51,28 +51,37 @@ class DataStruct:
 
         intents = discord.Intents.default()
         intents.message_content = True
+
         class MyClient(discord.Client):
+            def __init__(self, user_to_detect, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.user_to_detect = user_to_detect
+                self.message_detected = False
+
             async def on_ready(self):
                 print(f'Connecté en tant que {self.user}')
 
             async def on_message(self, message):
-
                 if message.author.id == self.user_to_detect:
-                    print(f"Message de {message.author}: {message.content}")
-                    return True
-                else:
-                    return False
+                    #print(f"Message de {message.author}: {message.content}")
+                    self.message_detected = True
+                    await self.close()
 
-        client = MyClient(intents=intents)
-        client.run(self.TOKEN_discord)
+        client = MyClient(user_to_detect=self.user_to_detect, intents=intents)
 
+        try:
+            client.run(self.TOKEN_discord)
+            return client.message_detected
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return False
 
     def get_trigger_n(self):
         self.trigger_n = 3
         return self.trigger_n
 
     def get_react_n(self):
-        self.react_n = 1
+        self.react_n = 2
         return self.react_n
 
     def trigger_react(self):
@@ -99,7 +108,7 @@ class DataStruct:
             elif self.react_n == 4:
                 print(get_top_tracks(self.user_id))
 
-        if self.trigger_n == 3 and self.detect_user_messages(self) : #discord message by user
+        if self.trigger_n == 3 and self.detect_user_messages() == True: #discord message by user
             if self.react_n == 1:
                 print(translate_to(self.text, self.lang))
             elif self.react_n == 2:

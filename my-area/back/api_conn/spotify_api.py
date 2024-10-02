@@ -45,4 +45,4 @@ if __name__ == "__main__":
     for idx, (name, track_count) in enumerate(playlists):
         print(f"{idx + 1}: {name} | Nombre de chansons : {track_count}")
 
-get_top_tracks()
+#get_top_tracks()
