@@ -96,5 +96,4 @@ if __name__ == '__main__':
 # self.text = texte a traduire
 # self.lang = langue de traduction
 # self.discord_mess = message a envoyer
-
 #assigner 1à X , numero reaction, string avec tous les arguments
