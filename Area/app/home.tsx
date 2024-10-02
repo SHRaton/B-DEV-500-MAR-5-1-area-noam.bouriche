@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, ImageBackground, Platform, Button, Pressable, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
+import { API_URL } from '@env';
 
 const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -9,7 +10,7 @@ const HomeScreen = () => {
   useEffect(() => {
     // Vérifie si l'utilisateur est authentifié
     const checkAuth = async () => {
-      const response = await fetch('http://localhost:5000/check-auth', {
+      const response = await fetch(`${API_URL}/check-auth`, {
         method: 'GET',
         credentials: 'include',  // Envoie les cookies pour la session
       });
@@ -25,7 +26,7 @@ const HomeScreen = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:5000/logout', {
+      const response = await fetch(`${API_URL}/logout`, {
         method: 'POST',
         credentials: 'include',  // Envoie les cookies pour détruire la session
       });

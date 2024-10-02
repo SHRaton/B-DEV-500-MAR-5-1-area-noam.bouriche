@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { API_URL } from '@env';
 
 interface Area {
   id: number;
@@ -23,7 +24,7 @@ const MyAreas: React.FC = () => {
   useEffect(() => {
     // Vérifie si l'utilisateur est authentifié
     const checkAuth = async () => {
-      const response = await fetch('http://localhost:5000/check-auth', {
+      const response = await fetch(`${API_URL}/check-auth`, {
         method: 'GET',
         credentials: 'include',  // Envoie les cookies pour la session
       });
@@ -40,7 +41,7 @@ const MyAreas: React.FC = () => {
   useEffect(() => {
     const fetchAreas = async () => {
       try {
-        const response = await fetch('http://localhost:5000/get-areas', {
+        const response = await fetch(`${API_URL}/get-areas`, {
           method: 'GET',
           credentials: 'include',
         });

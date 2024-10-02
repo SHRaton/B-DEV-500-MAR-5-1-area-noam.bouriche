@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { API_URL } from '@env';
 
 const RegisterScreen = () => {
   const [username, setUsername] = useState('');
@@ -18,7 +19,7 @@ const RegisterScreen = () => {
     });
 
     try {
-      const response = await fetch('http://localhost:5000/register', {
+      const response = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

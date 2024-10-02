@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { API_URL } from '@env';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -10,7 +11,7 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://localhost:5000/login', {
+      const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

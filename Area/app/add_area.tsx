@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { API_URL } from '@env';
 
 const AddArea = () => {
   const [name, setName] = useState('');
@@ -21,7 +22,7 @@ const AddArea = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('http://localhost:5000/check-auth', {
+        const response = await fetch(`${API_URL}/check-auth`, {
           method: 'GET',
           credentials: 'include',
         });
