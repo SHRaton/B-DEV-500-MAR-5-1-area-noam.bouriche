@@ -1,23 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { API_URL } from '@env';
 
 const RegisterScreen = () => {
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
 
   const handleRegister = async () => {
-    console.log('Données envoyées:', {
-      username: username,
-      email: email,
-      password: password
-    });
-
     try {
       const response = await fetch(`${API_URL}/register`, {
         method: 'POST',
@@ -25,8 +20,9 @@ const RegisterScreen = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          username: username,
           email: email,
+          name: name,
+          firstName: firstName,
           password: password,
         }),
       });
@@ -36,13 +32,13 @@ const RegisterScreen = () => {
 
       if (response.status === 201) {
         setSuccessMessage('Inscription réussie. Redirection vers la page de login...');
-        setErrorMessage('');  // Efface le message d'erreur s'il y en avait un
+        setErrorMessage('');
         setTimeout(() => {
-          router.push('/login');  // Redirection après 2 secondes
+          router.push('/login');
         }, 2000);
       } else {
         setErrorMessage(data.error || 'Erreur lors de l\'inscription.');
-        setSuccessMessage('');  // Efface le message de succès
+        setSuccessMessage('');
       }
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
@@ -51,37 +47,60 @@ const RegisterScreen = () => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    window.location.href = `${API_URL}/login/google`;
+  };
+
   return (
     <View style={styles.containerMain}>
       {Platform.OS === 'web' && <View style={styles.leftBar}></View>}
       <View style={styles.container}>
-        <Text style={styles.title}>Create a new account</Text>
-        {/* Affiche un message d'erreur si l'inscription échoue */}
+        <Image source={require('../assets/images/favicon.png')} style={styles.raccoonImage} />
+        <Text style={styles.tagline}>Turn your ideas into reality</Text>
+        <Text style={styles.subTagline}>Create your own automatisms with Actions and Reactions</Text>
+
+        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+          <Image source={require('../assets/logos/google.png')} style={styles.googleIcon} />
+          <Text style={styles.googleButtonText}>Continue with Google</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.orText}>or Sign in with Email</Text>
+
         {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
-        {/* Affiche un message de succès si l'inscription réussit */}
         {successMessage ? <Text style={styles.success}>{successMessage}</Text> : null}
 
         <TextInput
           style={styles.input}
-          placeholder="Nom d'utilisateur"
-          value={username}
-          onChangeText={setUsername}
-        />
-        <TextInput
-          style={styles.input}
           placeholder="Email"
+          placeholderTextColor="#d3d3d3"
           value={email}
           onChangeText={setEmail}
-          keyboardType="email-address"
         />
         <TextInput
           style={styles.input}
-          placeholder="Mot de passe"
+          placeholder="Name"
+          placeholderTextColor="#d3d3d3"
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="First Name"
+          placeholderTextColor="#d3d3d3"
+          value={firstName}
+          onChangeText={setFirstName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          placeholderTextColor="#d3d3d3"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
-        <Button title="S'inscrire" onPress={handleRegister} />
+        <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+          <Text style={styles.registerButtonText}>Register</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -105,20 +124,70 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     padding: 20,
-    marginTop: 200,
+    marginTop: 100,
   },
-  title: {
-    fontSize: 24,
+  raccoonImage: {
+    width: 150,
+    height: 150,
     marginBottom: 20,
+  },
+  tagline: {
+    fontSize: 24,
+    fontWeight: 'bold',
     textAlign: 'center',
+    marginBottom: 5,
+  },
+  subTagline: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  googleIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+  },
+  googleButtonText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  orText: {
+    marginVertical: 10,
+    color: '#888',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     padding: 10,
-    marginBottom: 10,
+    marginBottom: 20,  // Ajout de padding entre les champs
     borderRadius: 5,
     width: '80%',
+    backgroundColor: '#f0f0f0',  // Fond gris clair
+  },
+  registerButton: {
+    backgroundColor: '#6200EE',  // Violet pour le bouton register
+    padding: 15,
+    borderRadius: 5,
+    width: '80%',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  registerButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   error: {
     color: 'red',
