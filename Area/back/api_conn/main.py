@@ -91,5 +91,10 @@ def main():
 if __name__ == '__main__':
     main()
 
+# self.trigger_n = action a assigner
+# self.react_n = reaction a assigner
+# self.text = texte a traduire
+# self.lang = langue de traduction
+# self.discord_mess = message a envoyer
 
 #assigner 1à X , numero reaction, string avec tous les arguments
