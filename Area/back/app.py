@@ -61,15 +61,15 @@ def handle_login():
     user_data = {"id": user['id'], "email": user['email']}
     session['user'] = user_data
 
-    return jsonify({"authenticated": True, "message": "Connexion réussie", "user": user_data}), 200
+    return jsonify({"authenticated": True, "message": "Connexion reussie", "user": user_data}), 200
 
-# Route pour la connexion avec Google
+# Route pour la connexion via Google
 @app.route('/login/google')
 def google_login():
     redirect_uri = url_for('google_authorize', _external=True)
     return google.authorize_redirect(redirect_uri)
 
-# Callback après l'authentification Google
+# Callback après l'authentification via Google
 @app.route('/auth/google/callback')
 def google_authorize():
     token = google.authorize_access_token()
@@ -77,18 +77,18 @@ def google_authorize():
     
     conn = get_db_connection()
     
-    # Vérifier si l'utilisateur existe déjà dans la base de données
+    # Vérifie si l'utilisateur existe déjà dans la base de données
     user = conn.execute('SELECT * FROM users WHERE email = ?', (user_info['email'],)).fetchone()
     
     if not user:
         # Si l'utilisateur n'existe pas, on l'enregistre automatiquement
         conn.execute(
             'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-            (user_info['name'], user_info['email'], None)
+            (user_info['name'], user_info['email'], '')  # Utilisation d'une chaîne vide pour le mot de passe
         )
         conn.commit()
 
-        # Récupérer le nouvel utilisateur après l'insertion
+        # Récupérer l'utilisateur après insertion
         user = conn.execute('SELECT * FROM users WHERE email = ?', (user_info['email'],)).fetchone()
     
     conn.close()
@@ -96,9 +96,18 @@ def google_authorize():
     user_data = {"id": user['id'], "email": user['email']}
     session['user'] = user_data
 
-    return jsonify({"authenticated": True, "message": "Connexion réussie via Google", "user": user_data}), 200
+    # Redirige vers la page d'accueil après la connexion réussie
+    return redirect('http://localhost:8081/home')
 
-# Vérification de l'authentification
+# Page d'accueil
+@app.route('/home')
+def home():
+    if 'user' in session:
+        return f"Bienvenue sur la page d'accueil, {session['user']['email']} !"
+    else:
+        return "Vous n'êtes pas connecté."
+
+# Route pour vérifier si l'utilisateur est authentifié
 @app.route('/check-auth', methods=['GET'])
 def check_auth():
     if 'user' in session:
@@ -110,10 +119,9 @@ def check_auth():
 @app.route('/logout', methods=['POST'])
 def logout():
     session.pop('user', None)
-    print("Déconnexion réussie")
     return jsonify({"message": "Déconnexion réussie"}), 200
 
-# Route pour obtenir les areas (zones)
+# Route pour obtenir les areas
 @app.route('/get-areas', methods=['GET'])
 def get_areas():
     if 'user' not in session:

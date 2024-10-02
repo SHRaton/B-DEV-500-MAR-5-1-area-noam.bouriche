@@ -50,6 +50,7 @@ const RegisterScreen = () => {
   const handleGoogleLogin = () => {
     window.location.href = `${API_URL}/login/google`;
   };
+  
 
   return (
     <View style={styles.containerMain}>

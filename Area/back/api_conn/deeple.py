@@ -16,9 +16,6 @@ def translate_to(text, lang):
     if response.status_code == 200:
         result = response.json()
         return result['translations'][0]['text']
+
     else:
         return f"Erreur: {response.status_code} - {response.text}"
-
-texte_a_traduire = "Bonjour, j'aime le sexe"
-traduction = translate_to(texte_a_traduire, 'EN')
-print("Traduction en anglais:", traduction)
