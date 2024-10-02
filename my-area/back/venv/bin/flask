@@ -1,4 +1,4 @@
-#!/home/jdelfino/Documents/B-DEV-500-MAR-5-1-area-noam.bouriche-1/Area/back/venv/bin/python3
+#!/home/jdelfino/Documents/B-DEV-500-MAR-5-1-area-noam.bouriche-1/my-area/back/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

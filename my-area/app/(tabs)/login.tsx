@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const LoginScreen = () => {
@@ -36,9 +36,13 @@ const LoginScreen = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `http://localhost:5000/login/google`;
+    const googleLoginURL = `http://localhost:5000/login/google`;
+    if (Platform.OS === 'web') {
+      window.location.href = googleLoginURL; // For web platforms
+    } else {
+      Linking.openURL(googleLoginURL); // For Android and iOS platforms
+    }
   };
-
   return (
     <View style={styles.containerMain}>
       {Platform.OS === 'web' && <View style={styles.leftBar}></View>}
