@@ -1,6 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Dimensions, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+
+// Obtenir la largeur et la hauteur de l'écran
+const { width, height } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const router = useRouter();
@@ -10,13 +13,12 @@ const HomeScreen = () => {
       <View style={styles.contentContainer}>
         <Text style={styles.title}>Areacoon</Text>
         <Text style={styles.subtitle}>
-          Welcome visitor !
+          Welcome visitor !{'\n'}
           Thanks to Areacoon, automate your tasks like never before !
         </Text>
         <Text style={styles.sub_subtitle}>
           The automation platform for your digital life.
         </Text>
-        {/* Nouvelle disposition : flexDirection 'row' */}
         <View style={styles.rowContainer}>
           <Image
             source={require('../../assets/images/favicon.png')}
@@ -49,49 +51,46 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 56,
+    fontSize: width < 400 ? 40 : 56,  // Réduit la taille de la police sur petits écrans
     fontWeight: 'bold',
     color: '#514137',
     marginBottom: 20,
-    marginTop: -30,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 30,
+    fontSize: width < 400 ? 18 : 30,  // Taille de police dynamique
     color: '#555',
     marginBottom: 15,
-    marginTop: 50,
     textAlign: 'center',
     maxWidth: '80%',
   },
   sub_subtitle: {
-    fontSize: 25,
+    fontSize: width < 400 ? 16 : 25,  // Taille de police dynamique
     color: '#555',
     marginBottom: 10,
     textAlign: 'center',
     maxWidth: '80%',
   },
-  // Nouvelle disposition en ligne
   rowContainer: {
-    flexDirection: 'row', // Crée une disposition en ligne (horizontale)
-    justifyContent: 'space-between', // Espace entre les composants
-    alignItems: 'center', // Aligne les composants verticalement
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     width: '100%',
-    maxWidth: 1200, // Limite la largeur du conteneur
+    maxWidth: 1200,
     marginTop: 70,
   },
   image: {
-    width: 450,
-    height: 450,
+    width: width < 400 ? 250 : 450,  // Ajuste la taille de l'image sur petits écrans
+    height: width < 400 ? 250 : 450, // Taille dynamique de l'image
   },
   buttonContainer: {
     flex: 1,
-    marginLeft: 250,
+    marginLeft: width < 400 ? 50 : 250,  // Réduit l'espace entre les boutons sur petits écrans
   },
   button: {
     backgroundColor: '#514137',
     borderRadius: 10,
-    paddingVertical: 25,
+    paddingVertical: 15, // Taille plus petite pour mobile
     paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -104,12 +103,12 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: width < 400 ? 14 : 18, // Ajuste la taille du texte sur petits écrans
     fontWeight: 'bold',
   },
   signInButtonText: {
     color: '#514137',
-    fontSize: 18,
+    fontSize: width < 400 ? 14 : 18, // Ajuste la taille du texte sur petits écrans
     fontWeight: 'bold',
   },
 });

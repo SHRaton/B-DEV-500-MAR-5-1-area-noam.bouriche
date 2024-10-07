@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ScrollView, Pressable, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 
 interface Area {
@@ -21,19 +21,18 @@ const MyAreas: React.FC = () => {
   const router = useRouter();
 
   useEffect(() => {
-    // Vérifie si l'utilisateur est authentifié
     const checkAuth = async () => {
       const response = await fetch(`http://localhost:5000/check-auth`, {
         method: 'GET',
-        credentials: 'include',  // Envoie les cookies pour la session
+        credentials: 'include',
       });
       const data = await response.json();
-
+      
       if (!data.authenticated) {
-        router.push('/login');  // Redirige vers la page de login si non authentifié
+        router.push('/login');
       }
     };
-
+    
     checkAuth();
   }, []);
 
@@ -50,12 +49,18 @@ const MyAreas: React.FC = () => {
         console.error('Erreur lors de la récupération des areas:', error);
       }
     };
-
+    
     fetchAreas();
   }, []);
 
   const renderArea = ({ item }: { item: Area }) => (
-    <View style={styles.areaContainer}>
+    <Pressable 
+      style={styles.areaContainer} 
+      onPress={() => {
+        // Ajoutez ici la logique pour gérer le clic sur une area
+        console.log(`Area clicked: ${item.name}`);
+      }}
+    >
       <Text style={styles.areaName}>{item.name}</Text>
       <Text style={styles.areaDescription}>{item.description}</Text>
       <ScrollView>
@@ -67,12 +72,21 @@ const MyAreas: React.FC = () => {
           ) : null
         ))}
       </ScrollView>
-    </View>
+    </Pressable>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>My Areas</Text>
+      <View style={styles.header}>
+        <Pressable style={styles.back} onPress={() => router.push("/home")}>
+          <Image
+            source={require('../../assets/images/left.png')}
+            style={styles.backIcon}
+            resizeMode="contain"
+          />
+        </Pressable>
+        <Text style={styles.title}>My Areas</Text>
+      </View>
       <FlatList
         data={areas}
         keyExtractor={(item) => item.id.toString()}
@@ -87,10 +101,21 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  back: {
+    marginRight: 10,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+  },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 20,
   },
   areaContainer: {
     backgroundColor: '#f9f9f9',
