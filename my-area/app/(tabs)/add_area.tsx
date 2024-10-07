@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const AddArea = () => {
@@ -94,131 +94,157 @@ const AddArea = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Créer une nouvelle Area</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Nom de l'Area"
-        value={name}
-        onChangeText={setName}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Description de l'Area"
-        value={description}
-        onChangeText={setDescription}
-      />
-
-      {/* Choisir une action de départ */}
-      <Text style={styles.subtitle}>Choisir une action de départ</Text>
-      <View style={styles.fastFoodContainer}>
-        <TouchableOpacity style={styles.serviceBox} onPress={() => setSelectedApi('Riot Games')}>
-          <Image source={require('../../assets/logos/riot_games.png')} style={styles.serviceImage} />
-          <Text style={styles.serviceText}>Riot Games</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.serviceBox} onPress={() => setSelectedApi('Twitch')}>
-          <Image source={require('../../assets/logos/twitch.png')} style={styles.serviceImage} />
-          <Text style={styles.serviceText}>Twitch</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.serviceBox} onPress={() => setSelectedApi('YouTube')}>
-          <Image source={require('../../assets/logos/youtube.png')} style={styles.serviceImage} />
-          <Text style={styles.serviceText}>YouTube</Text>
-        </TouchableOpacity>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Pressable style={styles.back} onPress={() => router.push("/home")}>
+          <Image
+            source={require('../../assets/images/left.png')}
+            style={styles.backIcon}
+            resizeMode="contain"
+          />
+        </Pressable>
+        <Text style={styles.title}>Créer une nouvelle Area</Text>
       </View>
-
-      {/* Réactions ajoutées */}
-      <Text style={styles.subtitle}>Réactions ({reactions.length}/{MAX_REACTIONS})</Text>
-      <View style={styles.reactionContainer}>
-        {reactions.map((reaction, index) => (
-          <TouchableOpacity key={index} onPress={() => openReactionModal(index)} style={styles.reactionBox}>
-            <Image source={getLogoSource(reaction.logo)} style={styles.reactionLogo} />
-            <Text style={styles.reactionText}>{reaction.name}</Text>
+      <ScrollView contentContainerStyle={styles.innerContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Nom de l'Area"
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Description de l'Area"
+          value={description}
+          onChangeText={setDescription}
+        />
+        {/* Choisir une action de départ */}
+        <Text style={styles.subtitle}>Choisir une action de départ</Text>
+        <View style={styles.fastFoodContainer}>
+          <TouchableOpacity style={styles.serviceBox} onPress={() => setSelectedApi('Riot Games')}>
+            <Image source={require('../../assets/logos/riot_games.png')} style={styles.serviceImage} />
+            <Text style={styles.serviceText}>Riot Games</Text>
           </TouchableOpacity>
-        ))}
-      </View>
-
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmitArea}>
-        <Text style={styles.submitButtonText}>Ajouter l'area</Text>
-      </TouchableOpacity>
-
-      {/* Modal pour sélectionner le service */}
-      <Modal visible={showServiceModal} transparent={true} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Sélectionnez un service</Text>
-            <TouchableOpacity onPress={() => handleServiceSelect('Deepl')}>
-              <Image source={require('../../assets/logos/deepl.png')} style={styles.serviceLogo} />
-              <Text style={styles.optionText}>Deepl</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleServiceSelect('Discord')}>
-              <Image source={require('../../assets/logos/discord.png')} style={styles.serviceLogo} />
-              <Text style={styles.optionText}>Discord</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleServiceSelect('Twitch')}>
-              <Image source={require('../../assets/logos/twitch.png')} style={styles.serviceLogo} />
-              <Text style={styles.optionText}>Twitch</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleServiceSelect('Spotify')}>
-              <Image source={require('../../assets/logos/spotify.png')} style={styles.serviceLogo} />
-              <Text style={styles.optionText}>Spotify</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleServiceSelect('None')}>
-              <Image source={require('../../assets/logos/none.png')} style={styles.serviceLogo} />
-              <Text style={styles.optionText}>None</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.serviceBox} onPress={() => setSelectedApi('Twitch')}>
+            <Image source={require('../../assets/logos/twitch.png')} style={styles.serviceImage} />
+            <Text style={styles.serviceText}>Twitch</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.serviceBox} onPress={() => setSelectedApi('YouTube')}>
+            <Image source={require('../../assets/logos/youtube.png')} style={styles.serviceImage} />
+            <Text style={styles.serviceText}>YouTube</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
 
-      {/* Modal pour sélectionner la sous-partie */}
-      <Modal visible={showSubServiceModal} transparent={true} animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Sélectionnez une option pour {selectedService}</Text>
-            {selectedService === 'Deepl' && (
-              <>
-                <TouchableOpacity onPress={() => handleSubServiceSelect('Traduction rapide', 'deepl')}>
-                  <Text style={styles.optionText}>Traduction rapide</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleSubServiceSelect('Traduction complète', 'deepl')}>
-                  <Text style={styles.optionText}>Traduction complète</Text>
-                </TouchableOpacity>
-              </>
-            )}
-            {selectedService === 'Discord' && (
-              <>
-                <TouchableOpacity onPress={() => handleSubServiceSelect('Envoyer un message', 'discord')}>
-                  <Text style={styles.optionText}>Envoyer un message</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleSubServiceSelect('Recevoir une notification', 'discord')}>
-                  <Text style={styles.optionText}>Recevoir une notification</Text>
-                </TouchableOpacity>
-              </>
-            )}
-            {/* Ajout des autres options */}
-            <TouchableOpacity onPress={() => setShowSubServiceModal(false)} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>Fermer</Text>
+        {/* Réactions ajoutées */}
+        <Text style={styles.subtitle}>Réactions ({reactions.length}/{MAX_REACTIONS})</Text>
+        <View style={styles.reactionContainer}>
+          {reactions.map((reaction, index) => (
+            <TouchableOpacity key={index} onPress={() => openReactionModal(index)} style={styles.reactionBox}>
+              <Image source={getLogoSource(reaction.logo)} style={styles.reactionLogo} />
+              <Text style={styles.reactionText}>{reaction.name}</Text>
             </TouchableOpacity>
-          </View>
+          ))}
         </View>
-      </Modal>
-    </ScrollView>
+
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmitArea}>
+          <Text style={styles.submitButtonText}>Ajouter l'area</Text>
+        </TouchableOpacity>
+
+        {/* Modal pour sélectionner le service */}
+        <Modal visible={showServiceModal} transparent={true} animationType="slide">
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Sélectionnez un service</Text>
+              <TouchableOpacity onPress={() => handleServiceSelect('Deepl')}>
+                <Image source={require('../../assets/logos/deepl.png')} style={styles.serviceLogo} />
+                <Text style={styles.optionText}>Deepl</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleServiceSelect('Discord')}>
+                <Image source={require('../../assets/logos/discord.png')} style={styles.serviceLogo} />
+                <Text style={styles.optionText}>Discord</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleServiceSelect('Twitch')}>
+                <Image source={require('../../assets/logos/twitch.png')} style={styles.serviceLogo} />
+                <Text style={styles.optionText}>Twitch</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleServiceSelect('Spotify')}>
+                <Image source={require('../../assets/logos/spotify.png')} style={styles.serviceLogo} />
+                <Text style={styles.optionText}>Spotify</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleServiceSelect('None')}>
+                <Image source={require('../../assets/logos/none.png')} style={styles.serviceLogo} />
+                <Text style={styles.optionText}>None</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal pour sélectionner la sous-partie */}
+        <Modal visible={showSubServiceModal} transparent={true} animationType="slide">
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Sélectionnez une option pour {selectedService}</Text>
+              {selectedService === 'Deepl' && (
+                <>
+                  <TouchableOpacity onPress={() => handleSubServiceSelect('Traduction rapide', 'deepl')}>
+                    <Text style={styles.optionText}>Traduction rapide</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleSubServiceSelect('Traduction complète', 'deepl')}>
+                    <Text style={styles.optionText}>Traduction complète</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+              {selectedService === 'Discord' && (
+                <>
+                  <TouchableOpacity onPress={() => handleSubServiceSelect('Envoyer un message', 'discord')}>
+                    <Text style={styles.optionText}>Envoyer un message</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleSubServiceSelect('Recevoir une notification', 'discord')}>
+                    <Text style={styles.optionText}>Recevoir une notification</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+              {/* Ajout des autres options */}
+              <TouchableOpacity onPress={() => setShowSubServiceModal(false)} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>Fermer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
     marginBottom: 20,
+  },
+  back: {
+    paddingRight: 10,
+  },
+  backIcon: {
+    width: 30,
+    height: 30,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  innerContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   input: {
     borderWidth: 1,
