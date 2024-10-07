@@ -8,6 +8,7 @@ def destroy_db():
     cursor = conn.cursor()
 
     cursor.execute('DROP TABLE IF EXISTS users')
+    cursor.execute('DROP TABLE IF EXISTS areas')
 
     conn.commit()
     cursor.close()

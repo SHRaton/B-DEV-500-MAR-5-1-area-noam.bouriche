@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 const RegisterScreen = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [firstName, setFirstName] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -13,15 +12,14 @@ const RegisterScreen = () => {
 
   const handleRegister = async () => {
     try {
-      const response = await fetch(`${API_URL}/register`, {
+      const response = await fetch(`http://localhost:5000/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           email: email,
-          name: name,
-          firstName: firstName,
+          username: name,
           password: password,
         }),
       });
@@ -78,17 +76,10 @@ const RegisterScreen = () => {
         />
         <TextInput
           style={styles.input}
-          placeholder="Name"
+          placeholder="Username"
           placeholderTextColor="#d3d3d3"
           value={name}
           onChangeText={setName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="First Name"
-          placeholderTextColor="#d3d3d3"
-          value={firstName}
-          onChangeText={setFirstName}
         />
         <TextInput
           style={styles.input}

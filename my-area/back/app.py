@@ -31,16 +31,37 @@ google = oauth.register(
 )
 
 def get_db_connection():
-    conn = sqlite3.connect('database/database.db')  # Assure-toi que le chemin vers ta base de données est correct
-    conn.row_factory = sqlite3.Row  # Cela permet d'accéder aux colonnes par leur nom
+    conn = sqlite3.connect('database/database.db')
+    conn.row_factory = sqlite3.Row
     return conn
 
-# Route pour l'inscription
+@app.route('/get-user-info', methods=['GET'])
+def get_user_info():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    
+    user = session.get('user')
+    
+    if not user or 'id' not in user:
+        return jsonify({"error": "Invalid session data"}), 400
+
+    user_id = user['id']
+
+    conn = get_db_connection()
+    user_data = conn.execute('SELECT id, username, email, discord_id, spotify_id, twitch_id, riot_games_id FROM users WHERE id = ?', (user_id,)).fetchone()
+    conn.close()
+
+    if user_data:
+        user_info = dict(user_data)
+        return jsonify(user_info), 200
+    else:
+        return jsonify({"error": "User not found"}), 404
+
+
 @app.route('/register', methods=['POST'])
 def handle_register():
     return register_user(request)
 
-# Route pour la connexion via email
 @app.route('/login', methods=['POST'])
 def handle_login():
     data = request.get_json()
@@ -63,13 +84,11 @@ def handle_login():
 
     return jsonify({"authenticated": True, "message": "Connexion reussie", "user": user_data}), 200
 
-# Route pour la connexion via Google
 @app.route('/login/google')
 def google_login():
     redirect_uri = url_for('google_authorize', _external=True)
     return google.authorize_redirect(redirect_uri)
 
-# Callback après l'authentification via Google
 @app.route('/auth/google/callback')
 def google_authorize():
     token = google.authorize_access_token()
@@ -77,18 +96,15 @@ def google_authorize():
     
     conn = get_db_connection()
     
-    # Vérifie si l'utilisateur existe déjà dans la base de données
     user = conn.execute('SELECT * FROM users WHERE email = ?', (user_info['email'],)).fetchone()
     
     if not user:
-        # Si l'utilisateur n'existe pas, on l'enregistre automatiquement
         conn.execute(
             'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
             (user_info['name'], user_info['email'], '')  # Utilisation d'une chaîne vide pour le mot de passe
         )
         conn.commit()
 
-        # Récupérer l'utilisateur après insertion
         user = conn.execute('SELECT * FROM users WHERE email = ?', (user_info['email'],)).fetchone()
     
     conn.close()
@@ -96,10 +112,8 @@ def google_authorize():
     user_data = {"id": user['id'], "email": user['email']}
     session['user'] = user_data
 
-    # Redirige vers la page d'accueil après la connexion réussie
     return redirect('http://localhost:8081/home')
 
-# Page d'accueil
 @app.route('/home')
 def home():
     if 'user' in session:
@@ -107,7 +121,6 @@ def home():
     else:
         return "Vous n'êtes pas connecté."
 
-# Route pour vérifier si l'utilisateur est authentifié
 @app.route('/check-auth', methods=['GET'])
 def check_auth():
     if 'user' in session:
@@ -115,13 +128,11 @@ def check_auth():
     else:
         return jsonify({"authenticated": False}), 401
 
-# Route pour la déconnexion
 @app.route('/logout', methods=['POST'])
 def logout():
     session.pop('user', None)
     return jsonify({"message": "Déconnexion réussie"}), 200
 
-# Route pour obtenir les areas
 @app.route('/get-areas', methods=['GET'])
 def get_areas():
     if 'user' not in session:
