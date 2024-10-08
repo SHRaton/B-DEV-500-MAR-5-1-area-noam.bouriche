@@ -3,6 +3,7 @@ import time
 import socket
 import discord
 from spotify_api import get_top_tracks
+from spotify_api import get_user_profile
 from spotify_api import get_user_playlists
 from twitch_api import is_streaming
 from deeple import translate_to
@@ -13,7 +14,7 @@ class DataStruct:
         self.trigger_n = 2
         self.react_n = 1
         #deeple api data
-        self.text = "reaction DeepL"
+        self.text = "i love poop"
         self.lang = "FR"
         #discord api data
         self.discord_mess = "reaction discord"
@@ -28,8 +29,10 @@ class DataStruct:
         self.streamer_name = 'orchideedubresil'
         self.token_twitch = 'https://id.twitch.tv/oauth2/token'
 
+#############################################################################################################################################
+
     def send_message(self):
-        print("send_message")
+
         intents = discord.Intents.default()
         intents.message_content = True
         client = discord.Client(intents=intents)
@@ -76,17 +79,48 @@ class DataStruct:
             print(f"An error occurred: {e}")
             return False
 
+#############################################################################################################################################
+
     def get_trigger_n(self):
         self.trigger_n = 3
-        return self.trigger_n
+        if not (1 <= self.trigger_n <= 5):
+            print("Invalid trigger number")
+        else :
+            return self.trigger_n
 
     def get_react_n(self):
-        self.react_n = 2
-        return self.react_n
+        self.react_n = 5
+        if not (1 <= self.react_n <= 5):
+            print("Invalid reaction number")
+        else:
+            return self.react_n
+
+#############################################################################################################################################
+
+
+    def trigger_selector(self):
+
+        if self.trigger_n == 1:
+            while check_btc_increase(0) != True:
+                time.sleep(60) # wait for api restriction
+            return True
+
+        elif self.trigger_n == 2 :
+            while is_streaming(self.streamer_name, self.client_id_twitch, self.client_secret_twitch, self.token_twitch) != True:
+                time.sleep(60)
+            return True
+
+        elif self.trigger_n == 3:
+            if self.detect_user_messages() == True:
+                return True
+
+        else:
+            print("Invalid trigger number")
+
 
     def trigger_react(self):
 
-        if self.trigger_n == 1 and check_btc_increase(0) == True: #btc is increasing
+        if self.trigger_selector() == True:
             if self.react_n == 1:
                 print(translate_to(self.text, self.lang))
             elif self.react_n == 2:
@@ -96,31 +130,11 @@ class DataStruct:
             elif self.react_n == 4:
                 print(get_top_tracks(self.user_id))
             elif self.react_n == 5:
-                print("barmitzvah")
+               print(get_user_profile())
+            elif self.react_n == 6:
+                print("barmitva")
 
-        if self.trigger_n == 2 and is_streaming(self.streamer_name, self.client_id_twitch, self.client_secret_twitch, self.token_twitch) == True: #twitch is streaming
-            if self.react_n == 1:
-                print(translate_to(self.text, self.lang))
-            elif self.react_n == 2:
-                self.send_message()
-            elif self.react_n == 3:
-                print(get_user_playlists())
-            elif self.react_n == 4:
-                print(get_top_tracks(self.user_id))
-
-        if self.trigger_n == 3 and self.detect_user_messages() == True: #discord message by user
-            if self.react_n == 1:
-                print(translate_to(self.text, self.lang))
-            elif self.react_n == 2:
-                self.send_message()
-            elif self.react_n == 3:
-                print(get_user_playlists())
-            elif self.react_n == 4:
-                print(get_top_tracks(self.user_id))
-
-
-        elif not (1 <= self.trigger_n <= 5):
-            print("Invalid trigger number")
+#############################################################################################################################################
 
 def main():
     data = DataStruct()

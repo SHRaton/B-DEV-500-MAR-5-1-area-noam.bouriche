@@ -1,15 +1,15 @@
 import requests
 from datetime import datetime, timedelta
+import time
 
 def check_btc_increase(raise_percentage):
-    print("check_btc_increase")
-    
+
     def btc_price():
         url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
         response = requests.get(url)
         try:
             data = response.json()
-            print(f"BTC price today response: {data}")  # Log response to check structure
+            print(data)
             return data['bitcoin']['usd']
         except KeyError:
             print("Key 'bitcoin' not found in the response.")
@@ -35,16 +35,14 @@ def check_btc_increase(raise_percentage):
     price_yesterday = btc_price_yesterday()
 
     if price_today is None or price_yesterday is None:
-        #print("Unable to calculate increase percentage due to missing price data.")
+        print("Unable to calculate increase percentage due to missing price data.")
         return False
 
     increase_percentage = ((price_today - price_yesterday) / price_yesterday) * 100
 
     if increase_percentage >= raise_percentage:
-        #print(f"BTC price increased by {increase_percentage:.2f}%")
         return True
     else:
-        #print(f"BTC price increased by {increase_percentage:.2f}%, which is less than the threshold.")
         return False
 
 # Example usage:

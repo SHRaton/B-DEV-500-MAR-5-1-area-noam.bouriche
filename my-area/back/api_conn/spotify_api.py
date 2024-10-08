@@ -46,3 +46,5 @@ if __name__ == "__main__":
         print(f"{idx + 1}: {name} | Nombre de chansons : {track_count}")
 
 #get_top_tracks()
+
+get_user_profile()

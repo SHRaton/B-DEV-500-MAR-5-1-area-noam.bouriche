@@ -1,14 +1,14 @@
 import requests
 
 def is_streaming(streamer_name, client_id_twitch, client_secret_twitch, token_url):
-    # Request an OAuth token from Twitch
+
     try:
         response = requests.post(token_url, {
             'client_id': client_id_twitch,
             'client_secret': client_secret_twitch,
             'grant_type': 'client_credentials'
         })
-        response.raise_for_status()  # Raise an error for bad status codes (4xx/5xx)
+        response.raise_for_status()
         data = response.json()
         access_token = data['access_token']
     except requests.exceptions.RequestException as e:
@@ -18,7 +18,6 @@ def is_streaming(streamer_name, client_id_twitch, client_secret_twitch, token_ur
         print(f"Unexpected response structure: {response.json()}")
         return False
 
-    # Now check if the streamer is live
     stream_url = f'https://api.twitch.tv/helix/streams?user_login={streamer_name}'
     headers = {
         'Client-ID': client_id_twitch,

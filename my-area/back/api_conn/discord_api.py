@@ -56,3 +56,4 @@ def detect_user_messages(user_id, token):
 
 # Utilisation de la fonction
 #detect_user_messages(694509368904777748, 'MTI4ODU2OTYzNTU3NDM4NjY4OA.GnlT7O.Zfz1WpwdRacb2tREqgjpt8pAZlqa1CoTVPKw88')
+#send_message()
