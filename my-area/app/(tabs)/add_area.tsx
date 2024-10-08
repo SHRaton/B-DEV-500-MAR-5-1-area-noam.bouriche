@@ -408,8 +408,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 25, // Plus de padding pour agrandir les cases
     margin: 20,
-    width: 300, // Boîte plus large pour accueillir plus d'informations
-    height: 500, // Hauteur augmentée
+    width: 250, // Boîte plus large pour accueillir plus d'informations
+    height: 400, // Hauteur augmentée
     alignItems: 'flex-start',
     justifyContent: 'space-between', // Espace entre le logo et la section infos
     shadowColor: '#000',
@@ -422,16 +422,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginBottom: 20,
+    marginBottom: 20, // Taille du logo augmentée
     width: '100%',
   },
   reactionLogoLarge: {
-    width: 70, // Taille du logo augmentée
+    width: 70,
     height: 70,
-    marginRight: 20, // Espace entre le logo et le texte
+    marginRight: 20,
   },
   reactionTextLarge: {
-    fontSize: 20, // Police plus grande pour les services
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'left',
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#f0f0f0',
     padding: 15,
-    borderRadius: 12, // Boîte arrondie pour un effet moderne
+    borderRadius: 12,
     marginTop: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#007bff', // Accent de couleur pour les titres d'informations
+    color: '#007bff',
   },
   messageInputLarge: {
     borderWidth: 1,
