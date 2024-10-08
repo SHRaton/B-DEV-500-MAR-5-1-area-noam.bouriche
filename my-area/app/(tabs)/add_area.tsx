@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -32,6 +32,23 @@ const AddArea = () => {
     setShowServiceModal(false); // Fermer la modale principale
     setShowSubServiceModal(true); // Ouvrir la sous-modale des options de réaction
   };
+
+  useEffect(() => {
+    // Vérifie si l'utilisateur est authentifié
+    const checkAuth = async () => {
+      const response = await fetch(`http://localhost:5000/check-auth`, {
+        method: 'GET',
+        credentials: 'include',  // Envoie les cookies pour la session
+      });
+      const data = await response.json();
+
+      if (!data.authenticated) {
+        router.push('/');  // Redirige vers la page de login si non authentifié
+      }
+    };
+    
+    checkAuth();
+  }, []);
 
   // Sélection d'une sous-réaction (option après le choix du service)
   const handleSubServiceSelect = (subService: string, logo: string) => {

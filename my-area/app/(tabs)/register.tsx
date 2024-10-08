@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -9,6 +9,23 @@ const RegisterScreen = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    // Vérifie si l'utilisateur est authentifié
+    const checkAuth = async () => {
+      const response = await fetch(`http://localhost:5000/check-auth`, {
+        method: 'GET',
+        credentials: 'include',  // Envoie les cookies pour la session
+      });
+      const data = await response.json();
+
+      if (data.authenticated) {
+        router.push('/home');  // Redirige vers la page de login si non authentifié
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   const handleRegister = async () => {
     try {

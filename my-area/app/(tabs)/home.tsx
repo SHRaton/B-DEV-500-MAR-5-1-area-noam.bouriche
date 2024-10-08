@@ -16,7 +16,7 @@ const HomeScreen = () => {
       const data = await response.json();
 
       if (!data.authenticated) {
-        router.push('/login');  // Redirige vers la page de login si non authentifié
+        router.push('/');  // Redirige vers la page de login si non authentifié
       }
     };
 
@@ -69,13 +69,13 @@ const HomeScreen = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Pressable style={styles.modalButton} onPress={handleProfile}>
-              <Text style={styles.modalButtonText}>Accéder au profil</Text>
+              <Text style={styles.modalButtonText}>Profile page</Text>
             </Pressable>
             <Pressable style={styles.modalButton} onPress={handleLogout}>
-              <Text style={styles.modalButtonText}>Se déconnecter</Text>
+              <Text style={styles.modalButtonText}>Disconnect</Text>
             </Pressable>
             <Pressable style={styles.modalCancelButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.modalButtonText}>Annuler</Text>
+              <Text style={styles.modalButtonText}>Exit</Text>
             </Pressable>
           </View>
         </View>

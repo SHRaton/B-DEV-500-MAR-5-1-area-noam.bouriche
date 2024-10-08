@@ -29,7 +29,7 @@ const MyAreas: React.FC = () => {
       const data = await response.json();
       
       if (!data.authenticated) {
-        router.push('/login');
+        router.push('/');
       }
     };
     
