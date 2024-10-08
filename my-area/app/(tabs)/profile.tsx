@@ -1,60 +1,91 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 
-const router = useRouter();
-
 const ProfileScreen = () => {
-  // State pour stocker les informations utilisateur
+  const router = useRouter();
+
+  // State to store user information
   const [user, setUser] = useState(null);
+  const [editedUser, setEditedUser] = useState(null);  // State pour les données éditées
   const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);  // Mode édition
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Fonction pour récupérer les informations de l'utilisateur
+  // Function to fetch user information
   const fetchUserInfo = async () => {
     try {
       const response = await fetch('http://localhost:5000/get-user-info', {
         method: 'GET',
-        credentials: 'include', // Pour inclure les cookies avec la session
+        credentials: 'include', // Include cookies with the session
       });
 
       if (response.ok) {
         const data = await response.json();
-        setUser(data);  // Stocke les infos utilisateur dans le state
+        setUser(data);  // Store user info in state
+        setEditedUser(data);  // Initialize edited user info with current user info
       } else {
         const errorData = await response.json();
-        setError(errorData.error);  // Stocke l'erreur si la requête échoue
+        setError(errorData.error);  // Store error if request fails
       }
     } catch (error) {
-      setError('Failed to fetch user info');  // Gère les erreurs de réseau
+      setError('Failed to fetch user info');  // Handle network errors
     }
   };
 
-  // Appel à fetchUserInfo au chargement du composant
+  // Fetch user info on component mount
   useEffect(() => {
     fetchUserInfo();
   }, []);
 
-  // Fonction pour gérer la déconnexion
+  // Function to handle logout
   const handleLogout = async () => {
     try {
       const response = await fetch(`http://localhost:5000/logout`, {
         method: 'POST',
-        credentials: 'include',  // Envoie les cookies pour détruire la session
+        credentials: 'include',  // Send cookies to destroy session
       });
 
       if (response.ok) {
         setModalVisible(false);
-        router.push('/');  // Redirige l'utilisateur vers la page de login après la déconnexion
+        router.push('/');  // Redirect user to login page after logout
       } else {
-        console.error('Erreur lors de la déconnexion');
+        console.error('Error during logout');
       }
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      console.error('Error during logout:', error);
     }
   };
 
-  // Si les informations utilisateur ne sont pas encore chargées
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  // Function to save edited profile
+  const handleSave = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/update-user-info', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(editedUser),  // Envoyer les nouvelles informations utilisateur
+      });
+  
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUser(editedUser);  // Met à jour l'utilisateur dans l'état local avec les nouvelles données
+        setIsEditing(false);  // Désactiver le mode édition
+      } else {
+        console.error('Error updating profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };  
+
+  // If user info is not yet loaded
   if (!user) {
     return (
       <View style={styles.container}>
@@ -65,30 +96,69 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Conteneur de profil */}
-      <View style={styles.profileContainer}>
-        {/* Affichage de la photo de profil */}
-        <Image source={require('../../assets/images/profil.png')} style={styles.profileImage} resizeMode="contain" />
-
-        {/* Affichage des informations utilisateur */}
-        <View style={styles.infoContainer}>
-          <Text style={styles.nameText}> Your profile :</Text>
-
-          <Text style={styles.InfoText}>
-            <Text style={{ fontWeight: 'bold' }}> Username: </Text>
-            {user.username}</Text>
-
-          <Text style={styles.InfoText}>
-          <Text style={{ fontWeight: 'bold' }}> Email address : </Text>
-            {user.email}</Text>
-
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Edit Profile</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.header}>
+        <Pressable style={styles.back} onPress={() => router.push("/home")}>
+          <Image
+            source={require('../../assets/images/left.png')}
+            style={styles.backIcon}
+            resizeMode="contain"
+          />
+        </Pressable>
+        <Text style={styles.title}>Profile page</Text>
       </View>
 
-      {/* Autres informations utilisateur ou options de profil */}
+      <View style={styles.profileContainer}>
+        {/* Display profile picture */}
+        <Image source={require('../../assets/images/profil.png')} style={styles.profileImage} resizeMode="contain" />
+
+        {/* Mode édition */}
+        {isEditing ? (
+          <View style={styles.infoContainer}>
+            <Text style={styles.nameText}>Edit your profile:</Text>
+
+            {/* Champ pour modifier le username */}
+            <Text style={styles.labelText}>Username:</Text>
+            <TextInput
+              style={styles.input}
+              value={editedUser.username}
+              onChangeText={(text) => setEditedUser({ ...editedUser, username: text })}
+            />
+
+            {/* Champ pour modifier l'email */}
+            <Text style={styles.labelText}>Email address:</Text>
+            <TextInput
+              style={styles.input}
+              value={editedUser.email}
+              onChangeText={(text) => setEditedUser({ ...editedUser, email: text })}
+            />
+
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>Save Changes</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          /* Display user information */
+          <View style={styles.infoContainer}>
+            <Text style={styles.nameText}>Your profile:</Text>
+
+            <Text style={styles.InfoText}>
+              <Text style={{ fontWeight: 'bold' }}>Username: </Text>
+              {user.username}
+            </Text>
+
+            <Text style={styles.InfoText}>
+              <Text style={{ fontWeight: 'bold' }}>Email address: </Text>
+              {user.email}
+            </Text>
+
+            <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+              <Text style={styles.editButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
+      {/* Other user information or profile options */}
       <Pressable style={styles.disconnectButton} onPress={handleLogout}>
         <Text style={styles.disconnectButtonText}>Disconnect</Text>
       </Pressable>
@@ -96,10 +166,10 @@ const ProfileScreen = () => {
       <View style={styles.additionalInfoContainer}>
         <Text style={styles.sectionTitle}>About this page</Text>
         <Text style={styles.aboutText}>
-          This page allows you to view and manage your personal informations.
+          This page allows you to view and manage your personal information.
         </Text>
         <Text style={styles.aboutText}>
-          Here you'll find your username, e-mail address and other account details.
+          Here you'll find your username, e-mail address, and other account details.
         </Text>
         <Text style={styles.aboutText}>
           This page also offers the possibility of modifying this information to keep your profile up to date.
@@ -114,7 +184,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
     padding: 20,
-    justifyContent: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  back: {
+    marginRight: 10,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
   },
   profileContainer: {
     alignItems: 'center',
@@ -142,6 +227,20 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
   },
+  labelText: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'left',
+    marginBottom: 5,
+  },
+  input: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+    width: '100%',
+  },
   editButton: {
     backgroundColor: '#514137',
     borderRadius: 10,
@@ -151,6 +250,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   editButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  saveButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 15,
+  },
+  saveButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: 'bold',

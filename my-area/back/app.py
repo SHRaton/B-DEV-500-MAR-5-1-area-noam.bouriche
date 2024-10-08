@@ -63,6 +63,35 @@ def get_user_info():
 def handle_register():
     return register_user(request)
 
+
+@app.route('/update-user-info', methods=['PUT'])
+def update_user_info():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    user = session.get('user')
+    user_id = user['id']
+
+    data = request.get_json()
+    new_username = data.get('username')
+    new_email = data.get('email')
+
+    # Tu peux vérifier ici si les nouvelles informations sont valides (e.g., vérifier le format de l'email)
+
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE users SET username = ?, email = ? WHERE id = ?',
+        (new_username, new_email, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+    # Met à jour la session avec les nouvelles informations
+    session['user']['email'] = new_email
+
+    return jsonify({"message": "User info updated successfully"}), 200
+
+
 @app.route('/login', methods=['POST'])
 def handle_login():
     data = request.get_json()
