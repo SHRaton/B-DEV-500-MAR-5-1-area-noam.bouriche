@@ -33,8 +33,21 @@ const ProfileScreen = () => {
     }
   };
 
-  // Fetch user info on component mount
   useEffect(() => {
+    // Vérifie si l'utilisateur est authentifié
+    const checkAuth = async () => {
+      const response = await fetch(`http://localhost:5000/check-auth`, {
+        method: 'GET',
+        credentials: 'include',  // Envoie les cookies pour la session
+      });
+      const data = await response.json();
+
+      if (!data.authenticated) {
+        router.push('/');  // Redirige vers la page de login si non authentifié
+      }
+    };
+    
+    checkAuth();
     fetchUserInfo();
   }, []);
 
