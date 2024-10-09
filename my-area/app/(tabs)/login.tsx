@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform, L
 import { useRouter } from 'expo-router';
 
 const LoginScreen = () => {
+  const [isHovered, setIsHovered] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -43,11 +44,24 @@ const LoginScreen = () => {
       Linking.openURL(googleLoginURL); // For Android and iOS platforms
     }
   };
+
+  const handleHomeNavigation = () => {
+    router.push('/home');
+  };
+
   return (
     <View style={styles.containerMain}>
-      {Platform.OS === 'web' && <View style={styles.leftBar}></View>}
+      {Platform.OS === 'web' && <Image source={require('../../assets/images/leftbar.png')} style={styles.leftBar} />}
+      <TouchableOpacity style={styles.homeButton} onPress={handleHomeNavigation}>
+        <Image source={require('../../assets/images/left.png')} style={styles.homeIcon} />
+        <Text style={styles.homeText}>Home</Text>
+      </TouchableOpacity>
+      <View style={styles.leftTextContainer}>
+        <Text style={styles.text1}>Turn your ideas into reality.</Text>
+        <Text style={styles.text2}>Create your own automatism with Actions and Reactions</Text>
+      </View>
       <View style={styles.container}>
-        <Image source={require('../../assets/images/favicon.png')} style={styles.raccoonImage} />
+        <Text style={styles.maintitle}>AREA</Text>
         <Text style={styles.tagline}>Raccoon is here for you !</Text>
         <Text style={styles.subTagline}>Create your own automatisms with Actions and Reactions</Text>
 
@@ -57,6 +71,7 @@ const LoginScreen = () => {
         </TouchableOpacity>
 
         <Text style={styles.orText}>or Sign in with Email</Text>
+        <Text> </Text>
 
         {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
@@ -76,7 +91,12 @@ const LoginScreen = () => {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+        <TouchableOpacity
+          style={[styles.loginButton, isHovered ? styles.loginButtonHover : null]}
+          onPress={handleLogin}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
@@ -94,23 +114,64 @@ const LoginScreen = () => {
 
 const styles = StyleSheet.create({
   containerMain: {
-    display: 'flex',
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'center',
   },
   leftBar: {
-    backgroundColor: '#594F48',
-    borderTopEndRadius: 300,
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
     width: '50%',
     height: '100%',
+    borderTopEndRadius: 300,
+    backgroundColor: '#594F48',
+  },
+  leftTextContainer: {
+    position: 'absolute',
+    left: '10%',
+    bottom: '10%',
+    width: '40%',
+  },
+  text1: {
+    fontSize: 40,
+    color: '#fff',
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  text2: {
+    fontSize: 20,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  homeButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  homeIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 5,
+    tintColor: 'white',
+  },
+  homeText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   container: {
     flex: 1,
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    marginTop: 100,
+    marginLeft: '50%',
+  },
+  maintitle: {
+    fontSize: 80,
   },
   raccoonImage: {
     width: 150,
@@ -169,6 +230,16 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
     marginBottom: 10,
+    transition: 'transform 0.8s ease-in-out, box-shadow 0.8s ease-in-out',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  loginButtonHover: {
+    transform: 'scale(1.001)',
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)',
   },
   loginButtonText: {
     color: '#fff',
@@ -191,5 +262,41 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 });
+
+// Add media queries for responsiveness
+if (Platform.OS === 'web') {
+  const styleSheet = StyleSheet.create({
+    '@media (max-width: 768px)': {
+      containerMain: {
+        flexDirection: 'column',
+      },
+      leftBar: {
+        width: '100%',
+        height: '40%',
+        borderTopEndRadius: 0,
+        borderBottomEndRadius: 300,
+      },
+      leftTextContainer: {
+        left: '5%',
+        bottom: '60%',
+        width: '90%',
+      },
+      container: {
+        marginLeft: 0,
+        marginTop: '40%',
+      },
+    },
+    '@media (max-width: 480px)': {
+      text1: {
+        fontSize: 30,
+      },
+      text2: {
+        fontSize: 16,
+      },
+    },
+  });
+
+  Object.assign(styles, StyleSheet.flatten(styleSheet));
+}
 
 export default LoginScreen;
