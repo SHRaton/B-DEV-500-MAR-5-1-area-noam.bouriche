@@ -1,6 +1,7 @@
 import requests
 import time
 import socket
+from datetime import datetime
 import discord
 from spotify_api import get_track_recommendations
 from spotify_api import get_artist_recommendations
@@ -12,6 +13,7 @@ from spotify_api import get_user_playlists
 from twitch_api import is_streaming
 from deeple import translate_to
 from coin_gecko import check_btc_increase
+from weather_api import get_weather
 
 class DataStruct:
     def __init__(self):
@@ -32,6 +34,11 @@ class DataStruct:
         self.client_secret_twitch = 'u60swdb868cf1m4s2jkzf5k3d9xvh9'
         self.streamer_name = 'orchideedubresil'
         self.token_twitch = 'https://id.twitch.tv/oauth2/token'
+        #weather api data
+        self.api_key_weather = "e45b650128bf8616ffb882282464b58a"
+        self.city = "Paris"
+        self.return_info = "rain_1h"
+        self.return_trigger = "0"
 
 #############################################################################################################################################
 
@@ -86,14 +93,14 @@ class DataStruct:
 #############################################################################################################################################
 
     def get_trigger_n(self):
-        self.trigger_n = 1
+        self.trigger_n = 4
         if not (1 <= self.trigger_n <= 5):
             print("Invalid trigger number")
         else :
             return self.trigger_n
 
     def get_react_n(self):
-        self.react_n = 9
+        self.react_n = 2
         if not (1 <= self.react_n <= 8):
             print("Invalid reaction number")
         else:
@@ -101,6 +108,28 @@ class DataStruct:
 
 #############################################################################################################################################
 
+    def extract_hour(self, time_string):
+        return int(time_string.split(':')[0])
+
+    def is_raining(self):
+        resultat = get_weather(self.city, self.api_key_weather)
+        rain_1h = resultat["rain_1h"]
+
+        if rain_1h > 0.5:
+            return True
+        return False
+
+    def is_sunset(self):
+        resultat = get_weather(self.city, self.api_key_weather)
+        sunset = resultat["sunset"]
+        sunset_time = self.extract_hour(sunset)
+        current_time = datetime.now().hour
+
+        if sunset_time == current_time:
+            return True
+        return False
+
+#############################################################################################################################################
 
     def trigger_selector(self):
 
@@ -114,11 +143,19 @@ class DataStruct:
                 time.sleep(60) # wait for api restriction
             return True
 
-        elif self.trigger_n == 3:
+        elif self.trigger_n == 3: #detect user message
             if self.detect_user_messages() == True:
                 return True
 
-        elif self.trigger_n == 4:
+        elif self.trigger_n == 4: #pluie
+            if self.is_raining() != True:
+                time.sleep(3600)
+                self
+            return True
+
+        elif self.trigger_n == 5: #is sunset
+            while self.is_sunset() != True:
+                time.sleep(600)
             return True
 
         else:
