@@ -2,7 +2,11 @@ import requests
 import time
 import socket
 import discord
+from spotify_api import get_track_recommendations
+from spotify_api import get_artist_recommendations
+from spotify_api import explore_new_releases
 from spotify_api import get_top_tracks
+from spotify_api import discover_music
 from spotify_api import get_user_profile
 from spotify_api import get_user_playlists
 from twitch_api import is_streaming
@@ -82,15 +86,15 @@ class DataStruct:
 #############################################################################################################################################
 
     def get_trigger_n(self):
-        self.trigger_n = 3
+        self.trigger_n = 1
         if not (1 <= self.trigger_n <= 5):
             print("Invalid trigger number")
         else :
             return self.trigger_n
 
     def get_react_n(self):
-        self.react_n = 5
-        if not (1 <= self.react_n <= 5):
+        self.react_n = 9
+        if not (1 <= self.react_n <= 8):
             print("Invalid reaction number")
         else:
             return self.react_n
@@ -101,18 +105,21 @@ class DataStruct:
     def trigger_selector(self):
 
         if self.trigger_n == 1:
-            while check_btc_increase(0) != True:
+            while check_btc_increase(0) != False:
                 time.sleep(60) # wait for api restriction
             return True
 
         elif self.trigger_n == 2 :
             while is_streaming(self.streamer_name, self.client_id_twitch, self.client_secret_twitch, self.token_twitch) != True:
-                time.sleep(60)
+                time.sleep(60) # wait for api restriction
             return True
 
         elif self.trigger_n == 3:
             if self.detect_user_messages() == True:
                 return True
+
+        elif self.trigger_n == 4:
+            return True
 
         else:
             print("Invalid trigger number")
@@ -132,7 +139,13 @@ class DataStruct:
             elif self.react_n == 5:
                print(get_user_profile())
             elif self.react_n == 6:
-                print("barmitva")
+                print(get_track_recommendations(5))
+            elif self.react_n == 7:
+                print(get_artist_recommendations(5))
+            elif self.react_n == 8:
+                print(explore_new_releases(5))
+            else:
+                print("Invalid reaction number")
 
 #############################################################################################################################################
 
