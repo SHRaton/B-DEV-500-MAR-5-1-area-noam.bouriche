@@ -1,24 +1,42 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform, Linking } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 
-const LoginScreen = () => {
+const RegisterScreen = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
 
-  const handleLogin = async () => {
+  useEffect(() => {
+    const checkAuth = async () => {
+      const response = await fetch(`http://localhost:5000/check-auth`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const data = await response.json();
+
+      if (data.authenticated) {
+        router.push('/home');
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const handleRegister = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/login`, {
+      const response = await fetch(`http://localhost:5000/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
           email: email,
+          username: name,
           password: password,
         }),
       });
@@ -26,25 +44,27 @@ const LoginScreen = () => {
       const data = await response.json();
       console.log('Réponse du serveur:', data);
 
-      if (data.authenticated) {
-        router.push('/home');
+      if (response.status === 201) {
+        setSuccessMessage('Inscription réussie. Redirection vers la page de login...');
+        setErrorMessage('');
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
       } else {
-        setErrorMessage(data.error || 'Erreur lors de la connexion.');
+        setErrorMessage(data.error || 'Erreur lors de l\'inscription.');
+        setSuccessMessage('');
       }
     } catch (error) {
-      console.error('Erreur lors de la connexion:', error);
+      console.error('Erreur lors de l\'inscription:', error);
+      setErrorMessage('Erreur de connexion au serveur');
+      setSuccessMessage('');
     }
   };
 
   const handleGoogleLogin = () => {
-    const googleLoginURL = `http://localhost:5000/login/google`;
-    if (Platform.OS === 'web') {
-      window.location.href = googleLoginURL; // For web platforms
-    } else {
-      Linking.openURL(googleLoginURL); // For Android and iOS platforms
-    }
+    window.location.href = `http://localhost:5000/login/google`;
   };
-
+  
   const handleHomeNavigation = () => {
     router.push('/home');
   };
@@ -56,10 +76,8 @@ const LoginScreen = () => {
         <Image source={require('../../assets/images/left.png')} style={styles.homeIcon} />
         <Text style={styles.homeText}>Home</Text>
       </TouchableOpacity>
-      <View style={styles.leftTextContainer}>
-        <Text style={styles.text1}>Turn your ideas into reality.</Text>
-        <Text style={styles.text2}>Create your own automatism with Actions and Reactions</Text>
-      </View>
+      <Text style={styles.text1}>Turn your ideas into reality.</Text>
+      <Text style={styles.text2}>Create your own automatism with Actions and Reactions</Text>
       <View style={styles.container}>
         <Text style={styles.maintitle}>AREA</Text>
         <Text style={styles.tagline}>Raccoon is here for you !</Text>
@@ -74,6 +92,7 @@ const LoginScreen = () => {
         <Text> </Text>
 
         {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+        {successMessage ? <Text style={styles.success}>{successMessage}</Text> : null}
 
         <TextInput
           style={styles.input}
@@ -84,28 +103,26 @@ const LoginScreen = () => {
         />
         <TextInput
           style={styles.input}
-          placeholder="Mot de passe"
+          placeholder="Username"
+          placeholderTextColor="#d3d3d3"
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
           placeholderTextColor="#d3d3d3"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
         />
-
         <TouchableOpacity
-          style={[styles.loginButton, isHovered ? styles.loginButtonHover : null]}
-          onPress={handleLogin}
+          style={[styles.registerButton, isHovered ? styles.registerButtonHover : null]}
+          onPress={handleRegister}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <Text style={styles.loginButtonText}>Login</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.push('/forgot-password')}>
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.push('/register')}>
-          <Text style={styles.registerRedirectText}>Not registered yet? Register here</Text>
+          <Text style={styles.registerButtonText}>Register</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -113,36 +130,43 @@ const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  containerMain: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  leftBar: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: '50%',
-    height: '100%',
-    borderTopEndRadius: 300,
-    backgroundColor: '#594F48',
-  },
-  leftTextContainer: {
-    position: 'absolute',
-    left: '10%',
-    bottom: '10%',
-    width: '40%',
-  },
   text1: {
+    position: 'absolute',
+    top: 780,
+    left: 250,
     fontSize: 40,
     color: '#fff',
     fontWeight: 'bold',
-    marginBottom: 10,
   },
   text2: {
+    position: 'absolute',
+    top: 840,
+    left: 235,
     fontSize: 20,
     color: '#fff',
     fontWeight: 'bold',
+  },
+  maintitle: {
+    fontSize: 80,
+  },
+  containerMain: {
+    display: 'flex',
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  leftBar: {
+    backgroundColor: '#594F48',
+    borderTopEndRadius: 300,
+    width: '50%',
+    height: '100%',
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    padding: 20,
+    marginTop: 100,
   },
   homeButton: {
     position: 'absolute',
@@ -162,16 +186,6 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: '#fff',
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    marginLeft: '50%',
-  },
-  maintitle: {
-    fontSize: 100,
   },
   raccoonImage: {
     width: 150,
@@ -223,80 +237,39 @@ const styles = StyleSheet.create({
     width: '80%',
     backgroundColor: '#f0f0f0',
   },
-  loginButton: {
+  registerButton: {
     backgroundColor: '#6200EE',
     padding: 15,
     borderRadius: 5,
     width: '80%',
     alignItems: 'center',
     marginBottom: 10,
-    transition: 'transform 0.8s ease-in-out, box-shadow 0.8s ease-in-out',
+    // Transition for hover effect (web)
+    transition: 'transform 0.8s ease-in-out, box-shadow 0.8s ease-in-out', // Durée de 0.4 secondes
+    // Shadow default
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 5,
+    elevation: 5, // For Android shadow
   },
-  loginButtonHover: {
-    transform: 'scale(1.001)',
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)',
+  registerButtonHover: {
+    transform: 'scale(1.001)', // Slight enlargement on hover
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)', // Add a shadow effect
   },
-  loginButtonText: {
+  registerButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  forgotPasswordText: {
-    color: '#6200EE',
-    marginTop: 10,
-    marginBottom: 20,
-    fontSize: 14,
-  },
-  registerRedirectText: {
-    color: '#6200EE',
-    marginTop: 20,
-    fontSize: 14,
   },
   error: {
     color: 'red',
     marginBottom: 20,
   },
+  success: {
+    color: 'green',
+    marginBottom: 20,
+  },
 });
 
-// Add media queries for responsiveness
-if (Platform.OS === 'web') {
-  const styleSheet = StyleSheet.create({
-    '@media (max-width: 768px)': {
-      containerMain: {
-        flexDirection: 'column',
-      },
-      leftBar: {
-        width: '100%',
-        height: '40%',
-        borderTopEndRadius: 0,
-        borderBottomEndRadius: 300,
-      },
-      leftTextContainer: {
-        left: '5%',
-        bottom: '60%',
-        width: '90%',
-      },
-      container: {
-        marginLeft: 0,
-        marginTop: '40%',
-      },
-    },
-    '@media (max-width: 480px)': {
-      text1: {
-        fontSize: 30,
-      },
-      text2: {
-        fontSize: 16,
-      },
-    },
-  });
-
-  Object.assign(styles, StyleSheet.flatten(styleSheet));
-}
-
-export default LoginScreen;
+export default RegisterScreen;
