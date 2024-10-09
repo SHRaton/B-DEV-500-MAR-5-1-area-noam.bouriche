@@ -145,6 +145,13 @@ const ProfileScreen = () => {
               onChangeText={(text) => setEditedUser({ ...editedUser, email: text })}
             />
 
+            <Text style={styles.labelText}>Bio:</Text>
+            <TextInput
+              style={styles.input}
+              value={editedUser.bio}
+              onChangeText={(text) => setEditedUser({ ...editedUser, bio: text })}
+            />
+
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
               <Text style={styles.saveButtonText}>Save Changes</Text>
             </TouchableOpacity>
@@ -162,6 +169,11 @@ const ProfileScreen = () => {
             <Text style={styles.InfoText}>
               <Text style={{ fontWeight: 'bold' }}>Email address: </Text>
               {user.email}
+            </Text>
+
+            <Text style={styles.InfoText}>
+              <Text style={{ fontWeight: 'bold' }}>Bio: </Text>
+              {user.bio}
             </Text>
 
             <TouchableOpacity style={styles.editButton} onPress={handleEdit}>

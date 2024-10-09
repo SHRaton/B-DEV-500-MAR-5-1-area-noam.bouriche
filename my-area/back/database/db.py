@@ -18,7 +18,8 @@ def init_db():
             discord_id TEXT,
             spotify_id TEXT,
             twitch_id TEXT,
-            riot_games_id TEXT
+            riot_games_id TEXT,
+            bio TEXT
         )
     ''')
 

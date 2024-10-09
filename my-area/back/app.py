@@ -50,7 +50,7 @@ def get_user_info():
     user_id = user['id']
 
     conn = get_db_connection()
-    user_data = conn.execute('SELECT id, username, email, discord_id, spotify_id, twitch_id, riot_games_id FROM users WHERE id = ?', (user_id,)).fetchone()
+    user_data = conn.execute('SELECT id, username, email, discord_id, spotify_id, twitch_id, riot_games_id, bio FROM users WHERE id = ?', (user_id,)).fetchone()
     conn.close()
 
     if user_data:
@@ -76,19 +76,38 @@ def update_user_info():
     data = request.get_json()
     new_username = data.get('username')
     new_email = data.get('email')
-
-    # Tu peux vérifier ici si les nouvelles informations sont valides (e.g., vérifier le format de l'email)
+    new_bio = data.get('bio')
 
     conn = get_db_connection()
-    conn.execute(
-        'UPDATE users SET username = ?, email = ? WHERE id = ?',
-        (new_username, new_email, user_id)
-    )
+
+    update_fields = []
+    params = []
+
+    if new_username:
+        update_fields.append('username = ?')
+        params.append(new_username)
+
+    if new_email:
+        update_fields.append('email = ?')
+        params.append(new_email)
+
+    if new_bio:
+        update_fields.append('bio = ?')
+        params.append(new_bio)
+
+    if not update_fields:
+        return jsonify({"error": "No valid data provided to update"}), 400
+
+    params.append(user_id)
+
+    query = f'UPDATE users SET {", ".join(update_fields)} WHERE id = ?'
+
+    conn.execute(query, params)
     conn.commit()
     conn.close()
 
-    # Met à jour la session avec les nouvelles informations
-    session['user']['email'] = new_email
+    if new_email:
+        session['user']['email'] = new_email
 
     return jsonify({"message": "User info updated successfully"}), 200
 
@@ -114,6 +133,7 @@ def handle_login():
     session['user'] = user_data
 
     return jsonify({"authenticated": True, "message": "Connexion reussie", "user": user_data}), 200
+
 
 @app.route('/login/google')
 def google_login():
