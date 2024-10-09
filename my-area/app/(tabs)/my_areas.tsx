@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ScrollView, Pressable, Image, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 
 interface Area {
@@ -8,6 +8,7 @@ interface Area {
   name: string;
   description: string;
   key: string;
+  isActive: boolean;
   reaction_1?: string;
   reaction_2?: string;
   reaction_3?: string;
@@ -53,11 +54,36 @@ const MyAreas: React.FC = () => {
     fetchAreas();
   }, []);
 
+  const toggleAreaStatus = async (areaId: number, newStatus: boolean) => {
+    try {
+      const response = await fetch(`http://localhost:5000/update-area-status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          areaId,
+          isActive: newStatus,
+        }),
+      });
+      if (response.ok) {
+        setAreas(prevAreas =>
+          prevAreas.map(area =>
+            area.id === areaId ? { ...area, isActive: newStatus } : area
+          )
+        );
+      } else {
+        console.error('Failed to update area status');
+      }
+    } catch (error) {
+      console.error('Error updating area status:', error);
+    }
+  };
+
   const renderArea = ({ item }: { item: Area }) => (
     <Pressable 
       style={styles.areaContainer} 
       onPress={() => {
-        // Ajoutez ici la logique pour gérer le clic sur une area
+        // Handle area click logic
         console.log(`Area clicked: ${item.name}`);
       }}
     >
@@ -72,6 +98,14 @@ const MyAreas: React.FC = () => {
           ) : null
         ))}
       </ScrollView>
+      {/* Toggle Switch for Area Activation */}
+      <View style={styles.toggleContainer}>
+        <Text style={styles.toggleLabel}>Active:</Text>
+        <Switch
+          value={item.isActive}
+          onValueChange={(newStatus) => toggleAreaStatus(item.id, newStatus)}
+        />
+      </View>
     </Pressable>
   );
 
@@ -137,6 +171,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     marginBottom: 5,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  toggleLabel: {
+    marginRight: 10,
+    fontSize: 16,
   },
 });
 

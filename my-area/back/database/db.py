@@ -24,6 +24,7 @@ def init_db():
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS areas (
+        isActive BOOLEAN DEFAULT 0,
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
         name TEXT NOT NULL,

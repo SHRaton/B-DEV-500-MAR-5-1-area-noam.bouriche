@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from database.new_user import register_user
 from database.auth_user import login_user
+from database.add_area import add_area
 from werkzeug.security import check_password_hash
 from authlib.integrations.flask_client import OAuth
 import sqlite3
@@ -165,6 +166,7 @@ def logout():
 
 @app.route('/get-areas', methods=['GET'])
 def get_areas():
+    add_area(True, 1, "zobi", "itiuzikerjrg", "uhakej", None, None, None, None, None)
     if 'user' not in session:
         return jsonify({"error": "User not authenticated"}), 401
     
@@ -181,6 +183,29 @@ def get_areas():
     
     areas_list = [dict(area) for area in areas]
     return jsonify(areas_list), 200
+
+@app.route('/update-area-status', methods=['PUT'])
+def update_area_status():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    user = session.get('user')
+    user_id = user['id']
+
+    data = request.get_json()
+    area_id = data.get('areaId')
+    is_active = data.get('isActive')
+
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE areas SET isActive = ? WHERE id = ? AND user_id = ?',
+        (is_active, area_id, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Area status updated successfully"}), 200
+
 
 @app.route('/favicon.ico')
 def favicon():
