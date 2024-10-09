@@ -28,7 +28,6 @@ def get_top_tracks(time_range="medium_term", limit=5):
 
     results = sptop.current_user_top_tracks(time_range=time_range, limit=limit)
     top_tracks = [(item['name'], item['artists'][0]['name'], item['album']['name']) for item in results['items']]
-    print(top_tracks)
     return top_tracks
 
 

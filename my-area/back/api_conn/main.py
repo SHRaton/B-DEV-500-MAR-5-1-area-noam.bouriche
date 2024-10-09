@@ -18,7 +18,7 @@ from weather_api import get_weather
 class DataStruct:
     def __init__(self):
         self.trigger_n = 2
-        self.react_n = 1
+        self.react_n = [4, 2, 8, 1]
         #deeple api data
         self.text = "i love poop"
         self.lang = "FR"
@@ -42,6 +42,7 @@ class DataStruct:
 
 #############################################################################################################################################
 
+
     def send_message(self):
 
         intents = discord.Intents.default()
@@ -55,9 +56,18 @@ class DataStruct:
             if channel:
                 await channel.send(self.discord_mess)
                 print("Message envoyé !")
+                await client.close()
+                return True
             else:
                 print("Canal non trouvé.")
-        client.run(self.TOKEN_discord)
+                await client.close()
+                return False
+
+        try:
+            client.run(self.TOKEN_discord)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return False
 
     def detect_user_messages(self):
 
@@ -90,26 +100,12 @@ class DataStruct:
             print(f"An error occurred: {e}")
             return False
 
-#############################################################################################################################################
-
-    def get_trigger_n(self):
-        self.trigger_n = 4
-        if not (1 <= self.trigger_n <= 5):
-            print("Invalid trigger number")
-        else :
-            return self.trigger_n
-
-    def get_react_n(self):
-        self.react_n = 2
-        if not (1 <= self.react_n <= 8):
-            print("Invalid reaction number")
-        else:
-            return self.react_n
 
 #############################################################################################################################################
 
     def extract_hour(self, time_string):
         return int(time_string.split(':')[0])
+
 
     def is_raining(self):
         resultat = get_weather(self.city, self.api_key_weather)
@@ -118,6 +114,7 @@ class DataStruct:
         if rain_1h > 0.5:
             return True
         return False
+
 
     def is_sunset(self):
         resultat = get_weather(self.city, self.api_key_weather)
@@ -128,6 +125,51 @@ class DataStruct:
         if sunset_time == current_time:
             return True
         return False
+
+#############################################################################################################################################
+
+    def is_mutli_react(self):
+        if len(self.react_n) > 1:
+            self.multi_react()
+        elif len(self.react_n) == 1:
+            self.react_n = self.react_n[0]
+        return
+
+    def multi_react(self):
+        for i in self.react_n:
+            if i == 1:
+                print(translate_to(self.text, self.lang))
+            elif i == 2:
+                self.send_message()
+            elif i == 3:
+                print(get_user_playlists())
+            elif i == 4:
+                print(get_top_tracks("medium_term", 5))
+            elif i == 5:
+                print(get_user_profile())
+            elif i == 6:
+                print(get_track_recommendations(5))
+            elif i == 7:
+                print(get_artist_recommendations(5))
+            elif i == 8:
+                print(explore_new_releases(5))
+            else:
+                print("Invalid reaction number")
+
+    def get_trigger_n(self):
+        self.trigger_n = 4
+        if not (1 <= self.trigger_n <= 5):
+            print("Invalid trigger number")
+        else :
+            return self.trigger_n
+
+    def get_react_n(self):
+
+        if not all(1 <= n <= 8 for n in self.react_n):
+            print("Invalid reaction number in the list")
+        else:
+            return self.react_n
+
 
 #############################################################################################################################################
 
@@ -161,6 +203,8 @@ class DataStruct:
         else:
             print("Invalid trigger number")
 
+        self.is_mutli_react()
+
 
     def trigger_react(self):
 
@@ -172,7 +216,7 @@ class DataStruct:
             elif self.react_n == 3:
                 print(get_user_playlists())
             elif self.react_n == 4:
-                print(get_top_tracks(self.user_id))
+                print(get_top_tracks("medium_term", 5))
             elif self.react_n == 5:
                print(get_user_profile())
             elif self.react_n == 6:
@@ -181,15 +225,13 @@ class DataStruct:
                 print(get_artist_recommendations(5))
             elif self.react_n == 8:
                 print(explore_new_releases(5))
-            else:
-                print("Invalid reaction number")
 
 #############################################################################################################################################
 
 def main():
     data = DataStruct()
     data.get_trigger_n()
-    data.get_react_n()
+    data.is_mutli_react()
     data.trigger_react()
 
 if __name__ == '__main__':
