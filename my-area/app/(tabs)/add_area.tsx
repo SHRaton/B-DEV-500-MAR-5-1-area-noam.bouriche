@@ -127,47 +127,67 @@ const AddArea = () => {
                   <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
                       <Text style={styles.modalTitle}>Choisir une action pour {selectedApi}</Text>
-                      
+
                       {selectedApi === 'Riot Games' && (
                         <>
-                          <TouchableOpacity onPress={() => setSelectedApiAction('Game started')}>
+                          <TouchableOpacity 
+                            onPress={() => {
+                              setSelectedApiAction('Game started');
+                              setShowSubServiceModal(false); // Fermer la modale
+                              goNextStep(); // Aller à l'étape suivante
+                            }}>
                             <Text style={styles.optionText}>Game started</Text>
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={() => setSelectedApiAction('Game ended')}>
+                          <TouchableOpacity 
+                            onPress={() => {
+                              setSelectedApiAction('Game ended');
+                              setShowSubServiceModal(false); // Fermer la modale
+                              goNextStep(); // Aller à l'étape suivante
+                            }}>
                             <Text style={styles.optionText}>Game ended</Text>
                           </TouchableOpacity>
                         </>
                       )}
                       {selectedApi === 'Twitch' && (
                         <>
-                          <TouchableOpacity onPress={() => setSelectedApiAction('Streamer starts a stream')}>
+                          <TouchableOpacity 
+                            onPress={() => {
+                              setSelectedApiAction('Streamer starts a stream');
+                              setShowSubServiceModal(false); // Fermer la modale
+                              goNextStep(); // Aller à l'étape suivante
+                            }}>
                             <Text style={styles.optionText}>Streamer starts a stream</Text>
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={() => setSelectedApiAction('Streamer ends a stream')}>
+                          <TouchableOpacity 
+                            onPress={() => {
+                              setSelectedApiAction('Streamer ends a stream');
+                              setShowSubServiceModal(false); // Fermer la modale
+                              goNextStep(); // Aller à l'étape suivante
+                            }}>
                             <Text style={styles.optionText}>Streamer ends a stream</Text>
                           </TouchableOpacity>
                         </>
                       )}
                       {selectedApi === 'YouTube' && (
                         <>
-                          <TouchableOpacity onPress={() => setSelectedApiAction('New video posted')}>
+                          <TouchableOpacity 
+                            onPress={() => {
+                              setSelectedApiAction('New video posted');
+                              setShowSubServiceModal(false); // Fermer la modale
+                              goNextStep(); // Aller à l'étape suivante
+                            }}>
                             <Text style={styles.optionText}>New video posted</Text>
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={() => setSelectedApiAction('Live stream started')}>
+                          <TouchableOpacity 
+                            onPress={() => {
+                              setSelectedApiAction('Live stream started');
+                              setShowSubServiceModal(false); // Fermer la modale
+                              goNextStep(); // Aller à l'étape suivante
+                            }}>
                             <Text style={styles.optionText}>Live stream started</Text>
                           </TouchableOpacity>
                         </>
                       )}
-
-                      {/* Bouton pour confirmer la sélection et fermer la pop-up */}
-                      <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={() => {
-                          setShowSubServiceModal(false); // Fermer la modale
-                          goNextStep(); // Aller à l'étape suivante
-                        }}>
-                        <Text style={styles.closeButtonText}>Suivant</Text>
-                      </TouchableOpacity>
                     </View>
                   </View>
                 </Modal>
