@@ -128,13 +128,6 @@ class DataStruct:
 
 #############################################################################################################################################
 
-    def is_mutli_react(self):
-        if len(self.react_n) > 1:
-            self.multi_react()
-        elif len(self.react_n) == 1:
-            self.react_n = self.react_n[0]
-        return
-
     def multi_react(self):
         for i in self.react_n:
             if i == 1:
@@ -157,7 +150,7 @@ class DataStruct:
                 print("Invalid reaction number")
 
     def get_trigger_n(self):
-        self.trigger_n = 4
+        self.trigger_n = 1
         if not (1 <= self.trigger_n <= 5):
             print("Invalid trigger number")
         else :
@@ -203,35 +196,20 @@ class DataStruct:
         else:
             print("Invalid trigger number")
 
-        self.is_mutli_react()
+        self.mutli_react()
 
 
     def trigger_react(self):
 
         if self.trigger_selector() == True:
-            if self.react_n == 1:
-                print(translate_to(self.text, self.lang))
-            elif self.react_n == 2:
-                self.send_message()
-            elif self.react_n == 3:
-                print(get_user_playlists())
-            elif self.react_n == 4:
-                print(get_top_tracks("medium_term", 5))
-            elif self.react_n == 5:
-               print(get_user_profile())
-            elif self.react_n == 6:
-                print(get_track_recommendations(5))
-            elif self.react_n == 7:
-                print(get_artist_recommendations(5))
-            elif self.react_n == 8:
-                print(explore_new_releases(5))
+            self.multi_react()
 
 #############################################################################################################################################
 
 def main():
     data = DataStruct()
     data.get_trigger_n()
-    data.is_mutli_react()
+    data.get_react_n()
     data.trigger_react()
 
 if __name__ == '__main__':
