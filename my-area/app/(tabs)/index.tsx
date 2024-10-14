@@ -2,28 +2,28 @@ import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Dimensions, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 
-// Obtenir la largeur et la hauteur de l'écran
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const router = useRouter();
 
   useEffect(() => {
-    // Vérifie si l'utilisateur est authentifié
     const checkAuth = async () => {
-      const response = await fetch(`http://localhost:5000/check-auth`, {
+      const response = await fetch('http://localhost:5000/check-auth', {
         method: 'GET',
-        credentials: 'include',  // Envoie les cookies pour la session
+        credentials: 'include',
       });
       const data = await response.json();
 
       if (data.authenticated) {
-        router.push('/home');  // Redirige vers la page de login si non authentifié
+        router.push('/home');
       }
     };
 
     checkAuth();
   }, []);
+
+  const isMobile = width < 768;
 
   return (
     <View style={styles.container}>
@@ -36,12 +36,14 @@ const HomeScreen = () => {
         <Text style={styles.sub_subtitle}>
           The automation platform for your digital life.
         </Text>
-        <View style={styles.rowContainer}>
-          <Image
-            source={require('../../assets/images/favicon.png')}
-            style={styles.image}
-            resizeMode="contain"
-          />
+        <View style={isMobile ? styles.mobileLayout : styles.desktopLayout}>
+          <View style={styles.imageContainer}>
+            <Image
+              source={require('../../assets/images/favicon.png')}
+              style={[styles.image, isMobile && styles.mobileImage]}
+              resizeMode="contain"
+            />
+          </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.button} onPress={() => router.push('/register')}>
               <Text style={styles.buttonText}>SIGN UP</Text>
@@ -68,46 +70,60 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: width < 400 ? 40 : 56,  // Réduit la taille de la police sur petits écrans
+    fontSize: 56,
     fontWeight: 'bold',
     color: '#514137',
     marginBottom: 20,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: width < 400 ? 18 : 30,  // Taille de police dynamique
-    color: '#555',
-    marginBottom: 15,
-    textAlign: 'center',
-    maxWidth: '80%',
-  },
-  sub_subtitle: {
-    fontSize: width < 400 ? 16 : 25,  // Taille de police dynamique
+    fontSize: 24,
     color: '#555',
     marginBottom: 10,
     textAlign: 'center',
     maxWidth: '80%',
   },
-  rowContainer: {
+  sub_subtitle: {
+    fontSize: 20,
+    color: '#555',
+    marginBottom: 20,
+    textAlign: 'center',
+    maxWidth: '80%',
+  },
+  desktopLayout: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'center',
     width: '100%',
-    maxWidth: 1200,
-    marginTop: 70,
+    maxWidth: 1000,
+  },
+  mobileLayout: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  imageContainer: {
+    marginRight: width < 768 ? 0 : 40,
+    marginBottom: width < 768 ? 20 : 0,
   },
   image: {
-    width: width < 400 ? 250 : 450,  // Ajuste la taille de l'image sur petits écrans
-    height: width < 400 ? 250 : 450, // Taille dynamique de l'image
+    width: 450,
+    height: 450,
+  },
+  mobileImage: {
+    width: width * 0.7,
+    height: width * 0.7,
+    maxWidth: 350,
+    maxHeight: 350,
   },
   buttonContainer: {
-    flex: 1,
-    marginLeft: width < 400 ? 50 : 250,  // Réduit l'espace entre les boutons sur petits écrans
+    width: width < 768 ? '100%' : 500,
   },
   button: {
     backgroundColor: '#514137',
     borderRadius: 10,
-    paddingVertical: 15, // Taille plus petite pour mobile
+    paddingVertical: 15,
     paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -120,12 +136,12 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: width < 400 ? 14 : 18, // Ajuste la taille du texte sur petits écrans
+    fontSize: width < 768 ? 16 : 18,
     fontWeight: 'bold',
   },
   signInButtonText: {
     color: '#514137',
-    fontSize: width < 400 ? 14 : 18, // Ajuste la taille du texte sur petits écrans
+    fontSize: width < 768 ? 16 : 18,
     fontWeight: 'bold',
   },
 });
