@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const RegisterScreen = () => {
@@ -10,6 +10,9 @@ const RegisterScreen = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
+  const { width } = useWindowDimensions();
+
+  const isMobile = width <= 768;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -71,14 +74,22 @@ const RegisterScreen = () => {
 
   return (
     <View style={styles.containerMain}>
-      {Platform.OS === 'web' && <Image source={require('../../assets/images/leftbar.png')} style={styles.leftBar} />}
-      <TouchableOpacity style={styles.homeButton} onPress={handleHomeNavigation}>
-        <Image source={require('../../assets/images/left.png')} style={styles.homeIcon} />
-        <Text style={styles.homeText}>Home</Text>
-      </TouchableOpacity>
-      <Text style={styles.text1}>Turn your ideas into reality.</Text>
-      <Text style={styles.text2}>Create your own automatism with Actions and Reactions</Text>
-      <View style={styles.container}>
+      {!isMobile && Platform.OS === 'web' && (
+        <Image source={require('../../assets/images/leftbar.png')} style={styles.leftBar} />
+      )}
+      {!isMobile && (
+        <TouchableOpacity style={styles.homeButton} onPress={handleHomeNavigation}>
+          <Image source={require('../../assets/images/left.png')} style={styles.homeIcon} />
+          <Text style={styles.homeText}>Home</Text>
+        </TouchableOpacity>
+      )}
+      {!isMobile && (
+        <View style={styles.leftTextContainer}>
+          <Text style={styles.text1}>Turn your ideas into reality.</Text>
+          <Text style={styles.text2}>Create your own automatism with Actions and Reactions</Text>
+        </View>
+      )}
+      <View style={[styles.container, isMobile && styles.containerMobile]}>
         <Text style={styles.maintitle}>AREA</Text>
         <Text style={styles.tagline}>Raccoon is here for you !</Text>
         <Text style={styles.subTagline}>Create your own automatisms with Actions and Reactions</Text>
@@ -88,8 +99,7 @@ const RegisterScreen = () => {
           <Text style={styles.googleButtonText}>Continue with Google</Text>
         </TouchableOpacity>
 
-        <Text style={styles.orText}>or Sign in with Email</Text>
-        <Text> </Text>
+        <Text style={styles.orText}>or Sign up with Email</Text>
 
         {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
         {successMessage ? <Text style={styles.success}>{successMessage}</Text> : null}
@@ -117,7 +127,7 @@ const RegisterScreen = () => {
           secureTextEntry
         />
         <TouchableOpacity
-          style={[styles.registerButton, isHovered ? styles.registerButtonHover : null]}
+          style={[styles.registerButton, isHovered && styles.registerButtonHover]}
           onPress={handleRegister}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -130,43 +140,36 @@ const RegisterScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  text1: {
+  containerMain: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  leftBar: {
     position: 'absolute',
-    top: 780,
-    left: 250,
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: '50%',
+    height: '100%',
+    borderTopEndRadius: 300,
+    backgroundColor: '#594F48',
+  },
+  leftTextContainer: {
+    position: 'absolute',
+    left: '10%',
+    bottom: '10%',
+    width: '40%',
+  },
+  text1: {
     fontSize: 40,
     color: '#fff',
     fontWeight: 'bold',
+    marginBottom: 10,
   },
   text2: {
-    position: 'absolute',
-    top: 840,
-    left: 235,
     fontSize: 20,
     color: '#fff',
     fontWeight: 'bold',
-  },
-  maintitle: {
-    fontSize: 80,
-  },
-  containerMain: {
-    display: 'flex',
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  leftBar: {
-    backgroundColor: '#594F48',
-    borderTopEndRadius: 300,
-    width: '50%',
-    height: '100%',
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    padding: 20,
-    marginTop: 100,
   },
   homeButton: {
     position: 'absolute',
@@ -187,10 +190,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  raccoonImage: {
-    width: 150,
-    height: 150,
-    marginBottom: 20,
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    marginLeft: '50%',
+  },
+  containerMobile: {
+    marginLeft: 0,
+    width: '100%',
+  },
+  maintitle: {
+    fontSize: 80,
   },
   tagline: {
     fontSize: 24,
@@ -244,18 +256,16 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
     marginBottom: 10,
-    // Transition for hover effect (web)
-    transition: 'transform 0.8s ease-in-out, box-shadow 0.8s ease-in-out', // Durée de 0.4 secondes
-    // Shadow default
+    transition: 'transform 0.8s ease-in-out, box-shadow 0.8s ease-in-out',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 5, // For Android shadow
+    elevation: 5,
   },
   registerButtonHover: {
-    transform: 'scale(1.001)', // Slight enlargement on hover
-    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)', // Add a shadow effect
+    transform: 'scale(1.001)',
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)',
   },
   registerButtonText: {
     color: '#fff',
@@ -271,5 +281,28 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 });
+
+// Add media queries for responsiveness
+if (Platform.OS === 'web') {
+  const styleSheet = StyleSheet.create({
+    '@media (max-width: 768px)': {
+      containerMain: {
+        flexDirection: 'column',
+      },
+      leftBar: {
+        display: 'none',
+      },
+      leftTextContainer: {
+        display: 'none',
+      },
+      container: {
+        marginLeft: 0,
+        width: '100%',
+      },
+    },
+  });
+
+  Object.assign(styles, StyleSheet.flatten(styleSheet));
+}
 
 export default RegisterScreen;

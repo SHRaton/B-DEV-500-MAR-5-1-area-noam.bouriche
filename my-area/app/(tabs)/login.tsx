@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform, Linking } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform, Linking, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const LoginScreen = () => {
@@ -8,6 +8,9 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
+  const { width } = useWindowDimensions();
+
+  const isMobile = width <= 768;
 
   const handleLogin = async () => {
     try {
@@ -51,16 +54,22 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.containerMain}>
-      {Platform.OS === 'web' && <Image source={require('../../assets/images/leftbar.png')} style={styles.leftBar} />}
-      <TouchableOpacity style={styles.homeButton} onPress={handleHomeNavigation}>
-        <Image source={require('../../assets/images/left.png')} style={styles.homeIcon} />
-        <Text style={styles.homeText}>Home</Text>
-      </TouchableOpacity>
-      <View style={styles.leftTextContainer}>
-        <Text style={styles.text1}>Turn your ideas into reality.</Text>
-        <Text style={styles.text2}>Create your own automatism with Actions and Reactions</Text>
-      </View>
-      <View style={styles.container}>
+      {!isMobile && Platform.OS === 'web' && (
+        <Image source={require('../../assets/images/leftbar.png')} style={styles.leftBar} />
+      )}
+      {!isMobile && (
+        <TouchableOpacity style={styles.homeButton} onPress={handleHomeNavigation}>
+          <Image source={require('../../assets/images/left.png')} style={styles.homeIcon} />
+          <Text style={styles.homeText}>Home</Text>
+        </TouchableOpacity>
+      )}
+      {!isMobile && (
+        <View style={styles.leftTextContainer}>
+          <Text style={styles.text1}>Turn your ideas into reality.</Text>
+          <Text style={styles.text2}>Create your own automatism with Actions and Reactions</Text>
+        </View>
+      )}
+      <View style={[styles.container, isMobile && styles.containerMobile]}>
         <Text style={styles.maintitle}>AREA</Text>
         <Text style={styles.tagline}>Raccoon is here for you !</Text>
         <Text style={styles.subTagline}>Create your own automatisms with Actions and Reactions</Text>
@@ -71,7 +80,6 @@ const LoginScreen = () => {
         </TouchableOpacity>
 
         <Text style={styles.orText}>or Sign in with Email</Text>
-        <Text> </Text>
 
         {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
@@ -84,7 +92,7 @@ const LoginScreen = () => {
         />
         <TextInput
           style={styles.input}
-          placeholder="Mot de passe"
+          placeholder="Password"
           placeholderTextColor="#d3d3d3"
           value={password}
           onChangeText={setPassword}
@@ -92,7 +100,7 @@ const LoginScreen = () => {
         />
 
         <TouchableOpacity
-          style={[styles.loginButton, isHovered ? styles.loginButtonHover : null]}
+          style={[styles.loginButton, isHovered && styles.loginButtonHover]}
           onPress={handleLogin}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -116,6 +124,10 @@ const styles = StyleSheet.create({
   containerMain: {
     flex: 1,
     flexDirection: 'row',
+  },
+  containerMobile: {
+    marginLeft: 0,
+    width: '100%',
   },
   leftBar: {
     position: 'absolute',
@@ -263,7 +275,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// Add media queries for responsiveness
 if (Platform.OS === 'web') {
   const styleSheet = StyleSheet.create({
     '@media (max-width: 768px)': {
@@ -271,27 +282,14 @@ if (Platform.OS === 'web') {
         flexDirection: 'column',
       },
       leftBar: {
-        width: '100%',
-        height: '40%',
-        borderTopEndRadius: 0,
-        borderBottomEndRadius: 300,
+        display: 'none',
       },
       leftTextContainer: {
-        left: '5%',
-        bottom: '60%',
-        width: '90%',
+        display: 'none',
       },
       container: {
         marginLeft: 0,
-        marginTop: '40%',
-      },
-    },
-    '@media (max-width: 480px)': {
-      text1: {
-        fontSize: 30,
-      },
-      text2: {
-        fontSize: 16,
+        width: '100%',
       },
     },
   });
