@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, Pressable, Button } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const AddArea = () => {
@@ -13,11 +13,21 @@ const AddArea = () => {
   const [currentReactionIndex, setCurrentReactionIndex] = useState<number | null>(null); // Indice de la réaction en cours d'ajout
   const [showSubServiceModal, setShowSubServiceModal] = useState(false);
   const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [error, setError] = useState(''); // État pour stocker le message d'erreur
   const router = useRouter();
   const MAX_REACTIONS = 6;
 
   // Navigation entre les étapes
-  const goNextStep = () => setStep((prev) => prev + 1);
+  const goNextStep = () => {
+    // Vérification si l'un des champs est vide
+    if (!name || !description) {
+      setError('Veuillez remplir tous les champs.');
+      return;
+    }
+  
+    setError(''); // Réinitialise l'erreur si les champs sont remplis    
+    setStep((prev) => prev + 1);
+  }
   const goPreviousStep = () => setStep((prev) => prev - 1);
 
   // Fonction pour gérer la sélection d'une API (étape 2)
@@ -89,14 +99,24 @@ const AddArea = () => {
               style={styles.input}
               placeholder="Nom de l'Area"
               value={name}
-              onChangeText={setName}
+              onChangeText={(text) => {
+                setName(text);
+                setError(''); // Effacer l'erreur lors de la saisie
+              }}
             />
             <TextInput
               style={styles.input}
               placeholder="Description de l'Area"
               value={description}
-              onChangeText={setDescription}
+              onChangeText={(text) => {
+                setDescription(text);
+                setError(''); // Effacer l'erreur lors de la saisie
+              }}
             />
+            
+            {/* Affichage du message d'erreur si un champ est manquant */}
+            {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
+        
             <TouchableOpacity style={styles.button} onPress={goNextStep}>
               <Text style={styles.buttonText}>Suivant</Text>
             </TouchableOpacity>
@@ -126,6 +146,9 @@ const AddArea = () => {
                 <Modal visible={true} transparent={true} animationType="slide">
                   <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
+                      <Pressable style ={styles.crossbutton} onPress={() => setSelectedApi('')}>
+                        <Image source={require('../../assets/images/cross.png')} style={styles.cross}/>
+                      </Pressable>
                       <Text style={styles.modalTitle}>Choisir une action pour {selectedApi}</Text>
 
                       {selectedApi === 'Riot Games' && (
@@ -193,7 +216,7 @@ const AddArea = () => {
                 </Modal>
               )}
 
-              <TouchableOpacity style={styles.button} onPress={goPreviousStep}>
+              <TouchableOpacity style={styles.buttonBack} onPress={goPreviousStep}>
                 <Text style={styles.buttonText}>Retour</Text>
               </TouchableOpacity>
             </>
@@ -255,7 +278,7 @@ const AddArea = () => {
       <TouchableOpacity style={styles.button} onPress={handleSubmitArea}>
         <Text style={styles.buttonText}>Terminer et ajouter l'area</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={goPreviousStep}>
+      <TouchableOpacity style={styles.buttonBack} onPress={goPreviousStep} onPressIn={() => setSelectedApi('')}>
         <Text style={styles.buttonText}>Retour</Text>
       </TouchableOpacity>
 
@@ -331,10 +354,22 @@ const AddArea = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.stepIndicator}>Étape {step} / 3</Text>
-      {renderStepContent()}
-    </View>
+    <view style={styles.all}>
+      <View style={styles.header}>
+        <Pressable style={styles.back} onPress={() => router.push("/home")}>
+          <Image
+            source={require('../../assets/images/left.png')}
+            style={styles.backIcon}
+            resizeMode="contain"
+          />
+        </Pressable>
+        <Text style={styles.title}>Add Areas</Text>
+      </View>
+      <View style={styles.container}>
+        <Text style={styles.stepIndicator}>Étape {step} / 3</Text>
+        {renderStepContent()}
+      </View>
+    </view>
   );
 };
 
@@ -360,12 +395,42 @@ const getLogoSource = (logoName: string) => {
 };
 
 const styles = StyleSheet.create({
+  crossbutton:{
+    position: 'absolute',  // Position absolue dans le conteneur
+    top: '8%',             // 5% de l'espace en haut du conteneur
+    left: '2%',            // 5% de l'espace depuis la gauche  
+  },
+  cross:{
+    width: 24,
+    height: 24,
+  },
+  all: {
+    flex: 1,
+    padding: 20,
+  },
   container: {
     flex: 1,
     padding: 20,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f4f4f4', // Couleur de fond légère
+  },
+  header: {
+    top: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  back: {
+    marginRight: 10,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
   },
   input: {
     borderWidth: 1,
@@ -385,7 +450,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#2B211B',
+    padding: 15,
+    borderRadius: 30, // Boutons plus arrondis
+    alignItems: 'center',
+    width: '80%',
+    marginVertical: 10,
+  },
+  buttonBack: {
+    backgroundColor: '#5C4033',
     padding: 15,
     borderRadius: 30, // Boutons plus arrondis
     alignItems: 'center',
