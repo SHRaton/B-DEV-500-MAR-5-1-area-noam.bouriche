@@ -64,6 +64,37 @@ def get_user_info():
 def handle_register():
     return register_user(request)
 
+@app.route('/add-area', methods=['POST'])
+def handle_add_area():
+    data = request.json
+
+    # Extraire les données du corps de la requête
+    isActive = data.get('isActive', True)
+    isPublic = data.get('isPublic', False)
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    user = session.get('user')
+    user_id = user['id']
+    name = data.get('name')
+    description = data.get('description')
+
+    # Extraire les réactions et leurs informations
+    reactions = []
+    for i in range(1, 7):  # Pour les 6 réactions possibles
+        reaction = data.get(f'reaction_{i}')
+        reaction_info = data.get(f'reaction_{i}_info')
+        if reaction:
+            reactions.extend([reaction, reaction_info])
+        else:
+            reactions.extend([None, None])
+
+
+    try:
+        add_area(isActive, isPublic, user_id, name, description, *reactions)
+        return jsonify({"message": "Area added successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 @app.route('/update-user-info', methods=['PUT'])
 def update_user_info():
@@ -186,7 +217,6 @@ def logout():
 
 @app.route('/get-areas', methods=['GET'])
 def get_areas():
-    add_area(True, 1, "zobi", "itiuzikerjrg", "uhakej", None, None, None, None, None)
     if 'user' not in session:
         return jsonify({"error": "User not authenticated"}), 401
     
@@ -196,6 +226,7 @@ def get_areas():
         return jsonify({"error": "Invalid session data"}), 400
     
     user_id = user['id']
+    add_area(True, user_id, "zobi", "action1", "react1", "react2", "react3", None, None, None)
     
     conn = get_db_connection()
     areas = conn.execute('SELECT * FROM areas WHERE user_id = ?', (user_id,)).fetchall()

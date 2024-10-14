@@ -30,12 +30,6 @@ const AddArea = () => {
   }
   const goPreviousStep = () => setStep((prev) => prev - 1);
 
-  // Fonction pour gérer la sélection d'une API (étape 2)
-  const handleApiSelect = (api: string) => {
-    setSelectedApi(api); // Sauvegarde l'API sélectionnée
-    goNextStep(); // Passe à l'étape suivante
-  };
-
   // Sélection d'un service à partir de la modale principale
   const handleServiceSelect = (service: string) => {
     setSelectedService(service);
@@ -78,15 +72,44 @@ const AddArea = () => {
   };
 
   // Soumettre l'area une fois que tout est configuré
-  const handleSubmitArea = () => {
-    console.log('Ajouter l\'area avec:', {
+  const handleSubmitArea = async () => {
+    const areaData = {
+      isActive: true,
+      isPublic: false,
       name,
       description,
       selectedApi,
       selectedApiAction,
-      reactions
-    });
-    // Ici tu pourrais envoyer les données au backend
+      // Map the reactions to the format expected by the API
+      ...reactions.reduce((acc, reaction, index) => {
+        if (reaction.name !== 'None') {
+          acc[`reaction_${index + 1}`] = reaction.name;
+          acc[`reaction_${index + 1}_info`] = reaction.message || reaction.info || '';
+        }
+        return acc;
+      }, {})
+    };
+
+    try {
+      const response = await fetch('http://localhost:5000/add-area', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(areaData),
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to add area');
+      }
+      const result = await response.json();
+      console.log('Area added successfully:', result);
+      setError('');
+      router.push('/home');
+    } catch (error) {
+      console.error('Error adding area:', error);
+      setError('Failed to add area. Please try again.');
+    }
   };
 
   // Contenu dynamique selon l'étape actuelle
@@ -354,7 +377,7 @@ const AddArea = () => {
   };
 
   return (
-    <view style={styles.all}>
+    <View style={styles.all}>
       <View style={styles.header}>
         <Pressable style={styles.back} onPress={() => router.push("/home")}>
           <Image
@@ -369,7 +392,7 @@ const AddArea = () => {
         <Text style={styles.stepIndicator}>Étape {step} / 3</Text>
         {renderStepContent()}
       </View>
-    </view>
+    </View>
   );
 };
 

@@ -45,6 +45,7 @@ const MyAreas: React.FC = () => {
           credentials: 'include',
         });
         const data = await response.json();
+        console.log('Fetched areas:', data);
         setAreas(data);
       } catch (error) {
         console.error('Erreur lors de la récupération des areas:', error);
@@ -87,25 +88,25 @@ const MyAreas: React.FC = () => {
         console.log(`Area clicked: ${item.name}`);
       }}
     >
-      <Text style={styles.areaName}>{item.name}</Text>
-      <Text style={styles.areaDescription}>{item.description}</Text>
-      <ScrollView>
-        {[...Array(6)].map((_, index) => (
-          item[`reaction_${index + 1}` as keyof Area] ? (
-            <Text key={index} style={styles.areaReaction}>
-              Reaction {index + 1}: {item[`reaction_${index + 1}` as keyof Area]}
-            </Text>
-          ) : null
-        ))}
-      </ScrollView>
-      {/* Toggle Switch for Area Activation */}
-      <View style={styles.toggleContainer}>
-        <Text style={styles.toggleLabel}>Active:</Text>
-        <Switch
-          value={item.isActive}
-          onValueChange={(newStatus) => toggleAreaStatus(item.id, newStatus)}
-        />
+      <View style={styles.areaInfo}>
+        <Text style={styles.areaName}>{item.name}</Text>
+        <Text style={styles.areaDescription}>{item.description}</Text>
+        <ScrollView>
+          {[...Array(6)].map((_, index) => (
+            item[`reaction_${index + 1}` as keyof Area] ? (
+              <Text key={index} style={styles.areaReaction}>
+                Reaction {index + 1}: {item[`reaction_${index + 1}` as keyof Area]}
+              </Text>
+            ) : null
+          ))}
+        </ScrollView>
       </View>
+      {/* Toggle Switch for Area Activation */}
+      <Switch
+        value={item.isActive}
+        onValueChange={(newStatus) => toggleAreaStatus(item.id, newStatus)}
+        style={styles.switch}
+      />
     </Pressable>
   );
 
@@ -156,6 +157,12 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',  // Espace entre les éléments
+  },
+  areaInfo: {
+    flex: 1,  // Prend tout l'espace disponible sauf pour le switch
   },
   areaName: {
     fontSize: 24,
@@ -172,14 +179,10 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 5,
   },
-  toggleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  toggleLabel: {
-    marginRight: 10,
-    fontSize: 16,
+  switch: {
+    transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }],  // Agrandir le switch
+    alignSelf: 'center',  // Centre verticalement le switch
+    marginRight: 50,
   },
 });
 
