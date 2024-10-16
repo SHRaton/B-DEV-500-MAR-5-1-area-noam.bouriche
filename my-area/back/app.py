@@ -7,6 +7,7 @@ from werkzeug.security import check_password_hash
 from authlib.integrations.flask_client import OAuth
 import sqlite3
 import os
+import time
 
 app = Flask(__name__)
 app.secret_key = 'ratonisthegoat'
@@ -36,6 +37,136 @@ def get_db_connection():
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
+
+@app.route('/about.json', methods=['GET'])
+def handle_about_json():
+    client_ip = request.remote_addr
+    current_time = int(time.time())
+
+    response = {
+        "client": {
+            "host": client_ip
+        },
+        "server": {
+            "current_time": current_time,
+            "services": [
+                {
+                    "name": "Riot",
+                    "actions": [
+                        {
+                            "name": "finish_game",
+                            "description": "Detect when someone finishes a game"
+                        },
+                        {
+                            "name": "change_rank",
+                            "description": "Detect when someone changes rank"
+                        }
+                    ],
+                    "reactions": []
+                },
+                {
+                    "name": "Gecko",
+                    "actions": [
+                        {
+                            "name": "bitcoin_increase",
+                            "description": "Detect if Bitcoin price increases"
+                        }
+                    ],
+                    "reactions": []
+                },
+                {
+                    "name": "Twitch",
+                    "actions": [
+                        {
+                            "name": "streamer_live",
+                            "description": "Detect if a specific streamer goes live"
+                        }
+                    ],
+                    "reactions": []
+                },
+                {
+                    "name": "Discord",
+                    "actions": [
+                        {
+                            "name": "receive_message",
+                            "description": "Detect if the user receives a message"
+                        }
+                    ],
+                    "reactions": [
+                        {
+                            "name": "send_private_message",
+                            "description": "Send a private message"
+                        },
+                        {
+                            "name": "send_channel_message",
+                            "description": "Send a message in a channel"
+                        }
+                    ]
+                },
+                {
+                    "name": "Weather",
+                    "actions": [
+                        {
+                            "name": "detect_rain",
+                            "description": "Detect if it's raining"
+                        },
+                        {
+                            "name": "sunset_time",
+                            "description": "Detect if it's sunset time"
+                        }
+                    ],
+                    "reactions": []
+                },
+                {
+                    "name": "Deeple",
+                    "actions": [],
+                    "reactions": [
+                        {
+                            "name": "translate_text",
+                            "description": "Translate a text into the chosen language"
+                        }
+                    ]
+                },
+                {
+                    "name": "Spotify",
+                    "actions": [],
+                    "reactions": [
+                        {
+                            "name": "get_playlists",
+                            "description": "Retrieve user's playlists"
+                        },
+                        {
+                            "name": "get_top_5_tracks",
+                            "description": "Retrieve top 5 tracks of the user"
+                        },
+                        {
+                            "name": "get_song_recommendations",
+                            "description": "Retrieve 10 song recommendations from a song"
+                        },
+                        {
+                            "name": "get_artist_recommendations",
+                            "description": "Retrieve 10 artist recommendations from an artist"
+                        },
+                        {
+                            "name": "get_latest_songs",
+                            "description": "Retrieve the latest songs released"
+                        }
+                    ]
+                },
+                {
+                    "name": "Telegram",
+                    "actions": [],
+                    "reactions": [
+                        {
+                            "name": "send_message",
+                            "description": "Send a message"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+    return jsonify(response)
 
 @app.route('/get-user-info', methods=['GET'])
 def get_user_info():
