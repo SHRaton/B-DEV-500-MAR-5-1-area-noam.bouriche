@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const ProfileScreen = () => {
@@ -152,9 +152,9 @@ const ProfileScreen = () => {
               onChangeText={(text) => setEditedUser({ ...editedUser, bio: text })}
             />
 
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Pressable style={styles.saveButton} onPress={handleSave}>
               <Text style={styles.saveButtonText}>Save Changes</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         ) : (
           /* Display user information */
@@ -176,9 +176,9 @@ const ProfileScreen = () => {
               {user.bio}
             </Text>
 
-            <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+            <Pressable style={styles.editButton} onPress={handleEdit}>
               <Text style={styles.editButtonText}>Edit Profile</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         )}
       </View>

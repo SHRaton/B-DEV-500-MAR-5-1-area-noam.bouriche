@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, Pressable, Button } from 'react-native';
+import { View, Text, TextInput, Pressable, Image, StyleSheet, Modal, Button } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const AddArea = () => {
@@ -140,9 +140,9 @@ const AddArea = () => {
             {/* Affichage du message d'erreur si un champ est manquant */}
             {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
         
-            <TouchableOpacity style={styles.button} onPress={goNextStep}>
+            <Pressable style={styles.button} onPress={goNextStep}>
               <Text style={styles.buttonText}>Suivant</Text>
-            </TouchableOpacity>
+            </Pressable>
           </>
         );
         case 2:
@@ -150,18 +150,26 @@ const AddArea = () => {
             <>
               <Text style={styles.subtitle}>Choisir une action de départ</Text>
               <View style={styles.serviceContainer}>
-                <TouchableOpacity style={styles.serviceBox} onPress={() => setSelectedApi('Riot Games')}>
-                  <Image source={require('../../assets/logos/riot_games.png')} style={styles.serviceImage} />
+                <Pressable style={styles.serviceBox} onPress={() => setSelectedApi('Riot Games')}>
+                  <Image source={require('../../assets/logos/riot_games.png')} style={styles.serviceImage} resizeMode="contain"/>
                   <Text style={styles.serviceText}>Riot Games</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.serviceBox} onPress={() => setSelectedApi('Twitch')}>
-                  <Image source={require('../../assets/logos/twitch.png')} style={styles.serviceImage} />
+                </Pressable>
+                <Pressable style={styles.serviceBox} onPress={() => setSelectedApi('Twitch')}>
+                  <Image source={require('../../assets/logos/twitch.png')} style={styles.serviceImage} resizeMode="contain"/>
                   <Text style={styles.serviceText}>Twitch</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.serviceBox} onPress={() => setSelectedApi('YouTube')}>
-                  <Image source={require('../../assets/logos/youtube.png')} style={styles.serviceImage} />
-                  <Text style={styles.serviceText}>YouTube</Text>
-                </TouchableOpacity>
+                </Pressable>
+                <Pressable style={styles.serviceBox} onPress={() => setSelectedApi('Gecko')}>
+                  <Image source={require('../../assets/logos/gecko.png')} style={styles.serviceImage} resizeMode="contain"/>
+                  <Text style={styles.serviceText}>Gecko</Text>
+                </Pressable>
+                <Pressable style={styles.serviceBox} onPress={() => setSelectedApi('Discord')}>
+                  <Image source={require('../../assets/logos/discord.png')} style={styles.serviceImage} resizeMode="contain"/>
+                  <Text style={styles.serviceText}>Discord</Text>
+                </Pressable>
+                <Pressable style={styles.serviceBox} onPress={() => setSelectedApi('Weather')}>
+                  <Image source={require('../../assets/logos/weather.png')} style={styles.serviceImage} resizeMode="contain"/>
+                  <Text style={styles.serviceText}>Weather</Text>
+                </Pressable>
               </View>
 
               {/* Afficher la pop-up pour les sous-services après avoir sélectionné un service */}
@@ -176,62 +184,78 @@ const AddArea = () => {
 
                       {selectedApi === 'Riot Games' && (
                         <>
-                          <TouchableOpacity 
-                            onPress={() => {
-                              setSelectedApiAction('Game started');
-                              setShowSubServiceModal(false); // Fermer la modale
-                              goNextStep(); // Aller à l'étape suivante
-                            }}>
-                            <Text style={styles.optionText}>Game started</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity 
+                          <Pressable 
                             onPress={() => {
                               setSelectedApiAction('Game ended');
                               setShowSubServiceModal(false); // Fermer la modale
                               goNextStep(); // Aller à l'étape suivante
                             }}>
                             <Text style={styles.optionText}>Game ended</Text>
-                          </TouchableOpacity>
+                          </Pressable>
+                          <Pressable 
+                            onPress={() => {
+                              setSelectedApiAction('Rank changed');
+                              setShowSubServiceModal(false); // Fermer la modale
+                              goNextStep(); // Aller à l'étape suivante
+                            }}>
+                            <Text style={styles.optionText}>Rank changed</Text>
+                          </Pressable>
                         </>
                       )}
                       {selectedApi === 'Twitch' && (
                         <>
-                          <TouchableOpacity 
+                          <Pressable 
                             onPress={() => {
                               setSelectedApiAction('Streamer starts a stream');
                               setShowSubServiceModal(false); // Fermer la modale
                               goNextStep(); // Aller à l'étape suivante
                             }}>
                             <Text style={styles.optionText}>Streamer starts a stream</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity 
-                            onPress={() => {
-                              setSelectedApiAction('Streamer ends a stream');
-                              setShowSubServiceModal(false); // Fermer la modale
-                              goNextStep(); // Aller à l'étape suivante
-                            }}>
-                            <Text style={styles.optionText}>Streamer ends a stream</Text>
-                          </TouchableOpacity>
+                          </Pressable>
                         </>
                       )}
-                      {selectedApi === 'YouTube' && (
+                      {selectedApi === 'Gecko' && (
                         <>
-                          <TouchableOpacity 
+                          <Pressable 
                             onPress={() => {
-                              setSelectedApiAction('New video posted');
+                              setSelectedApiAction('Bitcoin increased');
                               setShowSubServiceModal(false); // Fermer la modale
                               goNextStep(); // Aller à l'étape suivante
                             }}>
-                            <Text style={styles.optionText}>New video posted</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity 
+                            <Text style={styles.optionText}>The price of bitcoin has increased</Text>
+                          </Pressable>
+                        </>
+                      )}
+                      {selectedApi === 'Discord' && (
+                        <>
+                          <Pressable 
                             onPress={() => {
-                              setSelectedApiAction('Live stream started');
+                              setSelectedApiAction('Message received');
                               setShowSubServiceModal(false); // Fermer la modale
                               goNextStep(); // Aller à l'étape suivante
                             }}>
-                            <Text style={styles.optionText}>Live stream started</Text>
-                          </TouchableOpacity>
+                            <Text style={styles.optionText}>Message received</Text>
+                          </Pressable>
+                        </>
+                      )}
+                      {selectedApi === 'Weather' && (
+                        <>
+                          <Pressable 
+                            onPress={() => {
+                              setSelectedApiAction('Raining Time');
+                              setShowSubServiceModal(false); // Fermer la modale
+                              goNextStep(); // Aller à l'étape suivante
+                            }}>
+                            <Text style={styles.optionText}>Raining Time</Text>
+                          </Pressable>
+                          <Pressable 
+                            onPress={() => {
+                              setSelectedApiAction('Sunset Time');
+                              setShowSubServiceModal(false); // Fermer la modale
+                              goNextStep(); // Aller à l'étape suivante
+                            }}>
+                            <Text style={styles.optionText}>Sunset Time</Text>
+                          </Pressable>
                         </>
                       )}
                     </View>
@@ -239,9 +263,9 @@ const AddArea = () => {
                 </Modal>
               )}
 
-              <TouchableOpacity style={styles.buttonBack} onPress={goPreviousStep}>
+              <Pressable style={styles.buttonBack} onPress={goPreviousStep}>
                 <Text style={styles.buttonText}>Retour</Text>
-              </TouchableOpacity>
+              </Pressable>
             </>
           );
           case 3:
@@ -252,16 +276,27 @@ const AddArea = () => {
         {reactions.map((reaction, index) => (
           <View key={index} style={styles.reactionBox}>
             {/* Logo et nom du service */}
-            <TouchableOpacity onPress={() => openReactionModal(index)} style={styles.reactionHeader}>
+            <Pressable onPress={() => openReactionModal(index)} style={styles.reactionHeader}>
               <Image source={getLogoSource(reaction.logo)} style={styles.reactionLogoLarge} />
               <Text style={styles.reactionTextLarge}>{reaction.name}</Text>
-            </TouchableOpacity>
+            </Pressable>
 
             {/* Afficher la section des informations uniquement si une réaction a été sélectionnée */}
             {reaction.name !== 'None' && (
               <View style={styles.informationBox}>
-                {reaction.name === 'Envoyer un message' && (
+                {reaction.name === 'Envoyer un message privé' && reaction.logo === 'discord' && (
                   <>
+                    <Text style={styles.informationTitle}>Personne a qui envoyer</Text>
+                    <TextInput
+                      style={styles.messageInputLarge}
+                      placeholder="A qui souhaitez-vous envoyer le message ?"
+                      value={reaction.person || ''}
+                      onChangeText={(text) => {
+                        const updatedReactions = [...reactions];
+                        updatedReactions[index].person = text; // Mettre à jour le message pour cette réaction
+                        setReactions(updatedReactions);
+                      }}
+                    />
                     <Text style={styles.informationTitle}>Message à envoyer</Text>
                     <TextInput
                       style={styles.messageInputLarge}
@@ -275,65 +310,76 @@ const AddArea = () => {
                     />
                   </>
                 )}
-
-                {/* Informations supplémentaires par défaut pour les autres réactions */}
-                {reaction.name !== 'Envoyer un message' && (
+                {reaction.name === 'Envoyer un message dans un channel' && reaction.logo === 'discord' && (
                   <>
-                    <Text style={styles.informationTitle}>Informations :</Text>
+                    <Text style={styles.informationTitle}>Channel dans lequel envoyer</Text>
                     <TextInput
                       style={styles.messageInputLarge}
-                      placeholder="Informations supplémentaires"
-                      value={reaction.info || ''}
+                      placeholder="channel"
+                      value={reaction.person || ''}
                       onChangeText={(text) => {
                         const updatedReactions = [...reactions];
-                        updatedReactions[index].info = text; // Mettre à jour les informations pour cette réaction
+                        updatedReactions[index].person = text; // Mettre à jour le message pour cette réaction
+                        setReactions(updatedReactions);
+                      }}
+                    />
+                    <Text style={styles.informationTitle}>Message à envoyer</Text>
+                    <TextInput
+                      style={styles.messageInputLarge}
+                      placeholder="message"
+                      value={reaction.message || ''}
+                      onChangeText={(text) => {
+                        const updatedReactions = [...reactions];
+                        updatedReactions[index].message = text; // Mettre à jour le message pour cette réaction
                         setReactions(updatedReactions);
                       }}
                     />
                   </>
                 )}
+
               </View>
             )}
           </View>
         ))}
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmitArea}>
+      <Pressable style={styles.button} onPress={handleSubmitArea}>
         <Text style={styles.buttonText}>Terminer et ajouter l'area</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.buttonBack} onPress={goPreviousStep} onPressIn={() => setSelectedApi('')}>
+      </Pressable>
+      <Pressable style={styles.buttonBack} onPress={goPreviousStep} onPressIn={() => setSelectedApi('')}>
         <Text style={styles.buttonText}>Retour</Text>
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Modal pour sélectionner un service */}
       <Modal visible={showServiceModal} transparent={true} animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Sélectionnez un service</Text>
-            <TouchableOpacity onPress={() => handleServiceSelect('Deepl')}>
-              <Image source={require('../../assets/logos/deepl.png')} style={styles.serviceLogo} />
+            <Pressable onPress={() => handleServiceSelect('Deepl')}>
+              <Image source={require('../../assets/logos/deepl.png')} style={styles.serviceLogo} resizeMode="contain"/>
               <Text style={styles.optionText}>Deepl</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleServiceSelect('Discord')}>
-              <Image source={require('../../assets/logos/discord.png')} style={styles.serviceLogo} />
+            </Pressable>
+            <Pressable onPress={() => handleServiceSelect('Discord')}>
+              <Image source={require('../../assets/logos/discord.png')} style={styles.serviceLogo} resizeMode="contain"/>
               <Text style={styles.optionText}>Discord</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleServiceSelect('Twitch')}>
-              <Image source={require('../../assets/logos/twitch.png')} style={styles.serviceLogo} />
-              <Text style={styles.optionText}>Twitch</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleServiceSelect('Spotify')}>
-              <Image source={require('../../assets/logos/spotify.png')} style={styles.serviceLogo} />
+            </Pressable>
+            <Pressable onPress={() => handleServiceSelect('Spotify')}>
+              <Image source={require('../../assets/logos/spotify.png')} style={styles.serviceLogo} resizeMode="contain"/>
               <Text style={styles.optionText}>Spotify</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleServiceSelect('None')}>
+            </Pressable>
+            <Pressable onPress={() => handleServiceSelect('Telegram')}>
+              <Image source={require('../../assets/logos/telegram.png')} style={styles.serviceLogo} resizeMode="contain"/>
+              <Text style={styles.optionText}>Telegram</Text>
+            </Pressable>
+            <Pressable onPress={() => handleServiceSelect('None')}>
+            <Image source={require('../../assets/logos/none.png')} style={styles.serviceLogo} resizeMode="contain"/>
               <Text style={styles.optionText}>None</Text>
-            </TouchableOpacity>
+            </Pressable>
 
             {/* Bouton pour fermer la modal */}
-            <TouchableOpacity onPress={() => setShowServiceModal(false)} style={styles.closeButton}>
+            <Pressable onPress={() => setShowServiceModal(false)} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>Fermer</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </Modal>
@@ -345,27 +391,50 @@ const AddArea = () => {
             <Text style={styles.modalTitle}>Sélectionnez une option pour {selectedService}</Text>
             {selectedService === 'Deepl' && (
               <>
-                <TouchableOpacity onPress={() => handleSubServiceSelect('Traduction rapide', 'deepl')}>
-                  <Text style={styles.optionText}>Traduction rapide</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleSubServiceSelect('Traduction complète', 'deepl')}>
-                  <Text style={styles.optionText}>Traduction complète</Text>
-                </TouchableOpacity>
+                <Pressable onPress={() => handleSubServiceSelect('Traduction', 'deepl')}>
+                  <Text style={styles.optionText}>Traduction</Text>
+                </Pressable>
               </>
             )}
             {selectedService === 'Discord' && (
               <>
-                <TouchableOpacity onPress={() => handleSubServiceSelect('Envoyer un message', 'discord')}>
-                  <Text style={styles.optionText}>Envoyer un message</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleSubServiceSelect('Recevoir une notification', 'discord')}>
-                  <Text style={styles.optionText}>Recevoir une notification</Text>
-                </TouchableOpacity>
+                <Pressable onPress={() => handleSubServiceSelect('Envoyer un message privé', 'discord')}>
+                  <Text style={styles.optionText}>Envoyer un message privé</Text>
+                </Pressable>
+                <Pressable onPress={() => handleSubServiceSelect('Envoyer un message dans un channel', 'discord')}>
+                  <Text style={styles.optionText}>Envoyer un message dans un channel</Text>
+                </Pressable>
               </>
             )}
-            <TouchableOpacity onPress={() => setShowSubServiceModal(false)} style={styles.closeButton}>
+            {selectedService === 'Spotify' && (
+              <>
+                <Pressable onPress={() => handleSubServiceSelect('Recuperer les playlists', 'spotify')}>
+                  <Text style={styles.optionText}>Recuperer les playlists</Text>
+                </Pressable>
+                <Pressable onPress={() => handleSubServiceSelect('Recuperer les 5 top titres', 'spotify')}>
+                  <Text style={styles.optionText}>Recuperer les 5 top titres</Text>
+                </Pressable>
+                <Pressable onPress={() => handleSubServiceSelect('Recuperer les 10 recommendations de sons', 'spotify')}>
+                  <Text style={styles.optionText}>Recuperer les 10 recommendations de sons</Text>
+                </Pressable>
+                <Pressable onPress={() => handleSubServiceSelect('Recuperer les 10 recommendations dartistes', 'spotify')}>
+                  <Text style={styles.optionText}>Recuperer les 10 recommendations d'artistes</Text>
+                </Pressable>
+                <Pressable onPress={() => handleSubServiceSelect('Recuperer les derniers sons sortis', 'spotify')}>
+                  <Text style={styles.optionText}>Recuperer les derniers sons sortis</Text>
+                </Pressable>
+              </>
+            )}
+            {selectedService === 'Telegram' && (
+              <>
+                <Pressable onPress={() => handleSubServiceSelect('Envoyer un message', 'telegram')}>
+                  <Text style={styles.optionText}>Envoyer un message</Text>
+                </Pressable>
+              </>
+            )}
+            <Pressable onPress={() => setShowSubServiceModal(false)} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>Fermer</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </Modal>
@@ -409,6 +478,12 @@ const getLogoSource = (logoName: string) => {
       return require('../../assets/logos/spotify.png');
     case 'riot_games':
       return require('../../assets/logos/riot_games.png');
+    case 'telegram':
+      return require('../../assets/logos/telegram.png');
+    case 'gecko':
+      return require('../../assets/logos/gecko.png');
+    case 'weather':
+      return require('../../assets/logos/weather.png');
     case 'youtube':
       return require('../../assets/logos/youtube.png');
     case 'none':

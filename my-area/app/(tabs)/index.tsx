@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Dimensions, Platform } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Image, Dimensions, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
@@ -45,12 +45,12 @@ const HomeScreen = () => {
             />
           </View>
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={() => router.push('/register')}>
+            <Pressable style={styles.button} onPress={() => router.push('/register')}>
               <Text style={styles.buttonText}>SIGN UP</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, styles.signInButton]} onPress={() => router.push('/login')}>
+            </Pressable>
+            <Pressable style={[styles.button, styles.signInButton]} onPress={() => router.push('/login')}>
               <Text style={styles.signInButtonText}>SIGN IN</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </View>

@@ -46,6 +46,11 @@ const HomeScreen = () => {
     router.push('/profile'); // Rediriger vers la page de profil
   };
 
+  const handleLinkAccounts = () => {
+    setModalVisible(false); // Masquer le menu
+    router.push('/link_accounts')
+  };
+
   return (
     <View>
       <View style={styles.contenairDisconnect}>
@@ -70,6 +75,9 @@ const HomeScreen = () => {
           <View style={styles.modalContent}>
             <Pressable style={styles.modalButton} onPress={handleProfile}>
               <Text style={styles.modalButtonText}>Profile page</Text>
+            </Pressable>
+            <Pressable style={styles.modalButton} onPress={handleLinkAccounts}>
+              <Text style={styles.modalButtonText}>Link Accounts</Text>
             </Pressable>
             <Pressable style={styles.modalButton} onPress={handleLogout}>
               <Text style={styles.modalButtonText}>Disconnect</Text>

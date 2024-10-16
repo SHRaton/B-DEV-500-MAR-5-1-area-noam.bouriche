@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform, Linking, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, Image, Platform, Linking, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const LoginScreen = () => {
@@ -58,10 +58,10 @@ const LoginScreen = () => {
         <Image source={require('../../assets/images/leftbar.png')} style={styles.leftBar} />
       )}
       {!isMobile && (
-        <TouchableOpacity style={styles.homeButton} onPress={handleHomeNavigation}>
+        <Pressable style={styles.homeButton} onPress={handleHomeNavigation}>
           <Image source={require('../../assets/images/left.png')} style={styles.homeIcon} />
           <Text style={styles.homeText}>Home</Text>
-        </TouchableOpacity>
+        </Pressable>
       )}
       {!isMobile && (
         <View style={styles.leftTextContainer}>
@@ -74,10 +74,10 @@ const LoginScreen = () => {
         <Text style={styles.tagline}>Raccoon is here for you !</Text>
         <Text style={styles.subTagline}>Create your own automatisms with Actions and Reactions</Text>
 
-        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+        <Pressable style={styles.googleButton} onPress={handleGoogleLogin}>
           <Image source={require('../../assets/logos/google.png')} style={styles.googleIcon} />
           <Text style={styles.googleButtonText}>Continue with Google</Text>
-        </TouchableOpacity>
+        </Pressable>
 
         <Text style={styles.orText}>or Sign in with Email</Text>
 
@@ -99,22 +99,22 @@ const LoginScreen = () => {
           secureTextEntry
         />
 
-        <TouchableOpacity
+        <Pressable
           style={[styles.loginButton, isHovered && styles.loginButtonHover]}
           onPress={handleLogin}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
           <Text style={styles.loginButtonText}>Login</Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+        <Pressable onPress={() => router.push('/forgot-password')}>
           <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity onPress={() => router.push('/register')}>
+        <Pressable onPress={() => router.push('/register')}>
           <Text style={styles.registerRedirectText}>Not registered yet? Register here</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </View>
   );
