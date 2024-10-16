@@ -15,7 +15,7 @@ from deeple import translate_to
 from coin_gecko import check_btc_increase
 from weather_api import get_weather
 import sqlite3
-from app import get_user_info
+
 
 class DataStruct:
     def __init__(self):
@@ -45,7 +45,6 @@ class DataStruct:
 #############################################################################################################################################
 
     def get_data_from_bd(self):
-        print (get_user_info())
         return
 
 #############################################################################################################################################
