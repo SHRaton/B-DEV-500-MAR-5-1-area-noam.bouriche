@@ -31,6 +31,15 @@ google = oauth.register(
     },
     jwks_uri='https://www.googleapis.com/oauth2/v3/certs',
 )
+discord = oauth.register(
+    name='discord',
+    client_id='1296083559974572052',
+    client_secret='XBeOoBuRaeqyPdGkIn0QBP8S5GxAiJU-',
+    access_token_url='https://discord.com/api/oauth2/token',
+    authorize_url='https://discord.com/api/oauth2/authorize',
+    api_base_url='https://discord.com/api/',
+    client_kwargs={'scope': 'identify email guilds'},
+)
 
 def get_db_connection():
     db_path = os.path.join(os.path.dirname(__file__), 'database', 'database.db')
@@ -326,6 +335,87 @@ def google_authorize():
     session['user'] = user_data
 
     return redirect('http://localhost:8081/home')
+
+@app.route('/login/discord')
+def discord_login():
+    redirect_uri2 = url_for('discord_authorize', _external=True)
+    return discord.authorize_redirect(redirect_uri2)
+
+@app.route('/auth/discord/callback')
+def discord_authorize():
+    token_discord = discord.authorize_access_token()
+    user_info_discord = discord.get('users/@me').json()  # Obtenez les informations de l'utilisateur
+
+    access_token = token_discord['access_token']
+    user = session.get('user')
+    user_id = user['id']
+
+    if user_id:
+        conn = get_db_connection()
+        
+        # Mettre à jour le token discord pour l'utilisateur connecté dans la base de données
+        conn.execute('UPDATE users SET discord_id = ? WHERE id = ?', (access_token, user_id))
+        conn.commit()
+        conn.close()
+
+        print('Token Discord :', token_discord)
+        print('Discord token successfully saved for user:', user_id)
+        print('User Discord Info:', user_info_discord)
+    else:
+        print('Error: No user_id found in session')
+
+    return redirect('http://localhost:8081/link_accounts')
+
+# Route pour vérifier la connexion Discord
+@app.route('/is-connected-discord', methods=['GET'])
+def is_connected_discord():
+    if 'user' not in session:
+        return jsonify({"connected": False, "error": "User not logged in"}), 401
+    
+    user_id = session['user']['id']
+    
+    conn = get_db_connection()
+    user = conn.execute('SELECT discord_id FROM users WHERE id = ?', (user_id,)).fetchone()
+    conn.close()
+
+    if user and user['discord_id']:  # Vérifie si le champ discord_id n'est pas vide
+        return jsonify({"connected": True})
+    else:
+        return jsonify({"connected": False})
+
+# Route pour vérifier la connexion Telegram
+@app.route('/is-connected-telegram', methods=['GET'])
+def is_connected_telegram():
+    if 'user' not in session:
+        return jsonify({"connected": False, "error": "User not logged in"}), 401
+    
+    user_id = session['user']['id']
+    
+    conn = get_db_connection()
+    user = conn.execute('SELECT telegram_id FROM users WHERE id = ?', (user_id,)).fetchone()
+    conn.close()
+
+    if user and user['telegram_id']:  # Vérifie si le champ telegram_id n'est pas vide
+        return jsonify({"connected": True})
+    else:
+        return jsonify({"connected": False})
+
+# Route pour vérifier la connexion Spotify
+@app.route('/is-connected-spotify', methods=['GET'])
+def is_connected_spotify():
+    if 'user' not in session:
+        return jsonify({"connected": False, "error": "User not logged in"}), 401
+    
+    user_id = session['user']['id']
+    
+    conn = get_db_connection()
+    user = conn.execute('SELECT spotify_id FROM users WHERE id = ?', (user_id,)).fetchone()
+    conn.close()
+
+    if user and user['spotify_id']:  # Vérifie si le champ spotify_id n'est pas vide
+        return jsonify({"connected": True})
+    else:
+        return jsonify({"connected": False})
 
 @app.route('/home')
 def home():
