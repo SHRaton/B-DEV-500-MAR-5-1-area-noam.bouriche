@@ -14,6 +14,8 @@ from twitch_api import is_streaming
 from deeple import translate_to
 from coin_gecko import check_btc_increase
 from weather_api import get_weather
+import sqlite3
+
 
 class DataStruct:
     def __init__(self):
@@ -42,6 +44,10 @@ class DataStruct:
 
 #############################################################################################################################################
 
+    def get_data_from_bd(self):
+        return
+
+#############################################################################################################################################
 
     def send_message(self):
 
@@ -199,7 +205,7 @@ class DataStruct:
         self.mutli_react()
 
 
-    def trigger_react(self):
+    def trigger_react_1(self):
 
         if self.trigger_selector() == True:
             self.multi_react()
@@ -208,9 +214,10 @@ class DataStruct:
 
 def main():
     data = DataStruct()
+    data.get_data_from_bd()
     data.get_trigger_n()
     data.get_react_n()
-    data.trigger_react()
+    data.trigger_react_1()
 
 if __name__ == '__main__':
     main()
