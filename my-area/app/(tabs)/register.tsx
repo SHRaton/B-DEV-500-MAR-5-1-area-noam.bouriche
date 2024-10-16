@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, Image, Platform, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const RegisterScreen = () => {
@@ -78,10 +78,10 @@ const RegisterScreen = () => {
         <Image source={require('../../assets/images/leftbar.png')} style={styles.leftBar} />
       )}
       {!isMobile && (
-        <TouchableOpacity style={styles.homeButton} onPress={handleHomeNavigation}>
+        <Pressable style={styles.homeButton} onPress={handleHomeNavigation}>
           <Image source={require('../../assets/images/left.png')} style={styles.homeIcon} />
           <Text style={styles.homeText}>Home</Text>
-        </TouchableOpacity>
+        </Pressable>
       )}
       {!isMobile && (
         <View style={styles.leftTextContainer}>
@@ -94,10 +94,10 @@ const RegisterScreen = () => {
         <Text style={styles.tagline}>Raccoon is here for you !</Text>
         <Text style={styles.subTagline}>Create your own automatisms with Actions and Reactions</Text>
 
-        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+        <Pressable style={styles.googleButton} onPress={handleGoogleLogin}>
           <Image source={require('../../assets/logos/google.png')} style={styles.googleIcon} />
           <Text style={styles.googleButtonText}>Continue with Google</Text>
-        </TouchableOpacity>
+        </Pressable>
 
         <Text style={styles.orText}>or Sign up with Email</Text>
 
@@ -126,14 +126,14 @@ const RegisterScreen = () => {
           onChangeText={setPassword}
           secureTextEntry
         />
-        <TouchableOpacity
+        <Pressable
           style={[styles.registerButton, isHovered && styles.registerButtonHover]}
           onPress={handleRegister}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
           <Text style={styles.registerButtonText}>Register</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </View>
   );
