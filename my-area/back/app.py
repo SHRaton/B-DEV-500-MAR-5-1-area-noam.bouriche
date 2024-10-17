@@ -5,6 +5,7 @@ from database.auth_user import login_user
 from database.add_area import add_area
 from werkzeug.security import check_password_hash
 from authlib.integrations.flask_client import OAuth
+from scheduler import start_scheduler
 import sqlite3
 import os
 import time
@@ -484,4 +485,5 @@ def favicon():
     return '', 204
 
 if __name__ == '__main__':
+
     app.run(debug=True)
