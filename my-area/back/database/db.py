@@ -16,6 +16,7 @@ def init_db():
             email TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
             discord_id TEXT,
+            telegram_id TEXT,
             spotify_id TEXT,
             twitch_id TEXT,
             riot_games_id TEXT,
