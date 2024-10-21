@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView, Pressable, Image, Switch } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ScrollView, Pressable, Image, Switch, TouchableOpacity, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 
 interface Area {
@@ -20,6 +20,9 @@ interface Area {
 const MyAreas: React.FC = () => {
   const [areas, setAreas] = useState<Area[]>([]);
   const router = useRouter();
+  const [hoveredButtons, setHoveredButtons] = useState<{ [key: number]: boolean }>({});
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [areaToDelete, setAreaToDelete] = useState<Area | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -45,7 +48,6 @@ const MyAreas: React.FC = () => {
           credentials: 'include',
         });
         const data = await response.json();
-        console.log('Fetched areas:', data);
         setAreas(data);
       } catch (error) {
         console.error('Erreur lors de la récupération des areas:', error);
@@ -80,11 +82,35 @@ const MyAreas: React.FC = () => {
     }
   };
 
+  const handleDeleteArea = async () => {
+    if (!areaToDelete) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/delete-area`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          areaId: areaToDelete.id,
+        }),
+      });
+
+      if (response.ok) {
+        setAreas(prevAreas => prevAreas.filter(area => area.id !== areaToDelete.id));
+        setIsDeleteModalVisible(false);
+        setAreaToDelete(null);
+      } else {
+        console.error('Failed to delete area');
+      }
+    } catch (error) {
+      console.error('Error deleting area:', error);
+    }
+  };
+
   const renderArea = ({ item }: { item: Area }) => (
     <Pressable 
       style={styles.areaContainer} 
       onPress={() => {
-        // Handle area click logic
         console.log(`Area clicked: ${item.name}`);
       }}
     >
@@ -101,7 +127,20 @@ const MyAreas: React.FC = () => {
           ))}
         </ScrollView>
       </View>
-      {/* Toggle Switch for Area Activation */}
+      <TouchableOpacity
+        style={[
+          styles.deleteButton,
+          hoveredButtons[item.id] && styles.deleteButtonHover
+        ]}
+        onMouseEnter={() => setHoveredButtons(prev => ({ ...prev, [item.id]: true }))}
+        onMouseLeave={() => setHoveredButtons(prev => ({ ...prev, [item.id]: false }))}
+        onPress={() => {
+          setAreaToDelete(item);
+          setIsDeleteModalVisible(true);
+        }}
+      >
+        <Text style={{ color: '#ef4444' }}>Delete</Text>
+      </TouchableOpacity>
       <Switch
         value={item.isActive}
         onValueChange={(newStatus) => toggleAreaStatus(item.id, newStatus)}
@@ -127,11 +166,100 @@ const MyAreas: React.FC = () => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderArea}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={isDeleteModalVisible}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Confirm Deletion</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to delete area "{areaToDelete?.name}"?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setIsDeleteModalVisible(false);
+                  setAreaToDelete(null);
+                }}
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleDeleteArea}
+              >
+                <Text style={[styles.modalButtonText, { color: 'white' }]}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '80%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  modalButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+  },
+  cancelButton: {
+    backgroundColor: '#f3f4f6',
+  },
+  confirmButton: {
+    backgroundColor: '#ef4444',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  deleteButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    fontSize: 18,
+    borderWidth: 2,
+    borderColor: '#ef4444',
+    borderRadius: 8,
+    color: '#ef4444',
+    marginRight: 25,
+    backgroundColor: 'white',
+  },
+  deleteButtonHover: {
+    backgroundColor: '#fef2f2',
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -180,6 +308,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   switch: {
+    color: '#2545',
     transform: [{ scaleX: 1.5 }, { scaleY: 1.5 }],  // Agrandir le switch
     alignSelf: 'center',  // Centre verticalement le switch
     marginRight: 50,

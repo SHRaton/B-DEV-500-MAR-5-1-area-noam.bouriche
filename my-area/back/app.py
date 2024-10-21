@@ -48,6 +48,41 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+
+@app.route('/delete-area', methods=['POST'])
+def delete_area():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    user = session.get('user')
+    user_id = user['id']
+
+    data = request.get_json()
+    area_id = data.get('areaId')
+
+    if not area_id:
+        return jsonify({"error": "Area ID is required"}), 400
+
+    try:
+        conn = get_db_connection()
+        # Vérifier que l'area appartient bien à l'utilisateur avant de la supprimer
+        area = conn.execute('SELECT * FROM areas WHERE id = ? AND user_id = ?', 
+                          (area_id, user_id)).fetchone()
+        
+        if not area:
+            conn.close()
+            return jsonify({"error": "Area not found or unauthorized"}), 404
+
+        conn.execute('DELETE FROM areas WHERE id = ? AND user_id = ?', 
+                    (area_id, user_id))
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Area deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/about.json', methods=['GET'])
 def handle_about_json():
     client_ip = request.remote_addr
