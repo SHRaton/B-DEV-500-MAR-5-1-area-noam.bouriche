@@ -42,6 +42,20 @@ discord = oauth.register(
     client_kwargs={'scope': 'identify email guilds'},
 )
 
+spotify = oauth.register(
+    name='spotify',
+    client_id='da8f8964454b472bb1954e06053a5ee7',
+    client_secret='cb849a8828414ae58fbb4f9b97dbcbae',
+    access_token_url='https://accounts.spotify.com/api/token',
+    authorize_url='https://accounts.spotify.com/authorize',
+    api_base_url='https://api.spotify.com/v1/',
+    client_kwargs={
+        'scope': 'user-read-private user-read-email playlist-read-private user-top-read',
+        'show_dialog': 'true',  # Force l'affichage du dialogue de connexion
+        'access_type': 'offline'  # Demande un refresh token
+    }
+)
+
 def get_db_connection():
     db_path = os.path.join(os.path.dirname(__file__), 'database', 'database.db')
     conn = sqlite3.connect(db_path)
@@ -435,6 +449,46 @@ def is_connected_telegram():
         return jsonify({"connected": True})
     else:
         return jsonify({"connected": False})
+    
+@app.route('/login/spotify')
+def spotify_login():
+    redirect_uri = url_for('spotify_authorize', _external=True)
+    return spotify.authorize_redirect(
+        redirect_uri,
+        show_dialog='true',  # Force l'affichage même si déjà connecté
+        prompt='consent'  # Force la demande de consentement
+    )
+
+@app.route('/auth/spotify/callback')
+def spotify_authorize():
+    try:
+        token = spotify.authorize_access_token()
+        resp = spotify.get('me', token=token)
+        user_info = resp.json()
+        
+        user = session.get('user')
+        user_id = user['id']
+
+        if user_id:
+            conn = get_db_connection()
+            
+            # Stockage du token d'accès et du refresh token si disponible
+            conn.execute('UPDATE users SET spotify_id = ? WHERE id = ?', 
+                        (token['access_token'], user_id))
+            conn.commit()
+            conn.close()
+
+            print('Token Spotify :', token)
+            print('Spotify token successfully saved for user:', user_id)
+            print('User Spotify Info:', user_info)
+        else:
+            print('Error: No user_id found in session')
+
+        return redirect('http://localhost:8081/link_accounts')
+        
+    except Exception as e:
+        print(f"Error during Spotify authorization: {str(e)}")
+        return redirect('http://localhost:8081/link_accounts')
 
 # Route pour vérifier la connexion Spotify
 @app.route('/is-connected-spotify', methods=['GET'])
