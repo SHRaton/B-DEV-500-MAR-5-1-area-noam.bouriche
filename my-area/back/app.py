@@ -240,7 +240,7 @@ def get_user_info():
     user_id = user['id']
 
     conn = get_db_connection()
-    user_data = conn.execute('SELECT id, username, email, discord_id, spotify_id, twitch_id, riot_games_id, bio FROM users WHERE id = ?', (user_id,)).fetchone()
+    user_data = conn.execute('SELECT id, username, email, discord_id, spotify_id, twitch_id, bio FROM users WHERE id = ?', (user_id,)).fetchone()
     conn.close()
 
     if user_data:
@@ -286,50 +286,53 @@ def handle_add_area():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+
 @app.route('/update-user-info', methods=['PUT'])
 def update_user_info():
     if 'user' not in session:
         return jsonify({"error": "User not authenticated"}), 401
-
+    
     user = session.get('user')
     user_id = user['id']
-
+    
     data = request.get_json()
     new_username = data.get('username')
     new_email = data.get('email')
     new_bio = data.get('bio')
-
+    
     conn = get_db_connection()
-
+    
     update_fields = []
     params = []
-
-    if new_username:
+    
+    # Vérifier si le champ existe dans la requête, pas sa valeur
+    if 'username' in data:
         update_fields.append('username = ?')
         params.append(new_username)
-
-    if new_email:
+    
+    if 'email' in data:
         update_fields.append('email = ?')
         params.append(new_email)
-
-    if new_bio:
+    
+    # Permettre la mise à jour de la bio même si elle est vide
+    if 'bio' in data:
         update_fields.append('bio = ?')
         params.append(new_bio)
-
+    
     if not update_fields:
         return jsonify({"error": "No valid data provided to update"}), 400
-
+    
     params.append(user_id)
-
+    
     query = f'UPDATE users SET {", ".join(update_fields)} WHERE id = ?'
-
+    
     conn.execute(query, params)
     conn.commit()
     conn.close()
-
-    if new_email:
+    
+    if 'email' in data:
         session['user']['email'] = new_email
-
+    
     return jsonify({"message": "User info updated successfully"}), 200
 
 
