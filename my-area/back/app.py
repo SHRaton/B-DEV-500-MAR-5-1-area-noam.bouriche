@@ -1,21 +1,31 @@
 from flask import Flask, request, jsonify, session, redirect, url_for
-from flask_cors import CORS
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired
+from authlib.integrations.flask_client import OAuth
+from werkzeug.security import check_password_hash
+from email.mime.multipart import MIMEMultipart
 from database.new_user import register_user
 from database.auth_user import login_user
 from database.add_area import add_area
-from werkzeug.security import check_password_hash
-from authlib.integrations.flask_client import OAuth
 from scheduler import start_scheduler
+from email.mime.text import MIMEText
+from flask_cors import CORS
 import sqlite3
-import os
+import smtplib
 import time
+import os
 
 app = Flask(__name__)
 app.secret_key = 'ratonisthegoat'
-CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True, origins=['http://localhost:8081'])
 
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 app.config['SESSION_COOKIE_SECURE'] = True
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'areaservices0@gmail.com'  # Remplacez par votre email Gmail
+app.config['MAIL_PASSWORD'] = 'aicw rljl qxbn ixtb'  # Utiliser un mot de passe d'application Google
+app.config['SECURITY_PASSWORD_SALT'] = 'sel_secret'  # Changez ceci pour votre propre sel secret
 
 # Configuration Google OAuth
 oauth = OAuth(app)
@@ -55,6 +65,107 @@ spotify = oauth.register(
         'access_type': 'offline'  # Demande un refresh token
     }
 )
+
+def generate_confirmation_token(email):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt=app.config['SECURITY_PASSWORD_SALT'])
+
+def send_reset_email(user_email):
+    token = generate_confirmation_token(user_email)
+    reset_url = f'http://localhost:8081/reset-password/{token}'  # Ajustez l'URL selon votre frontend
+
+    message = MIMEMultipart()
+    message['From'] = app.config['MAIL_USERNAME']
+    message['To'] = user_email
+    message['Subject'] = "Réinitialisation de votre mot de passe"
+    
+    body = f'Pour réinitialiser votre mot de passe, cliquez sur le lien suivant : {reset_url}'
+    message.attach(MIMEText(body, 'plain'))
+
+    try:
+        server = smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
+        server.starttls()
+        server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+        text = message.as_string()
+        server.sendmail(app.config['MAIL_USERNAME'], user_email, text)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Erreur lors de l'envoi du mail: {e}")
+        raise
+
+@app.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.get_json()  # Au lieu de request.form
+    email = data.get('email')  # Utiliser .get() pour éviter l'erreur KeyError
+    
+    if not email:
+        return jsonify({'error': 'Email is required'}), 400
+        
+    # Vérifiez si l'email existe dans la base de données
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+    conn.close()
+    
+    if not user:
+        return jsonify({'error': 'Email not found'}), 404
+    
+    try:
+        send_reset_email(email)
+        return jsonify({'message': 'Reset email sent successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Route pour traiter la réinitialisation du mot de passe
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+        email = serializer.loads(token, salt=app.config['SECURITY_PASSWORD_SALT'], max_age=3600)
+        # Si le token est valide, permettre à l'utilisateur de changer son mot de passe
+        if request.method == 'POST':
+            new_password = request.form['new_password']
+            # Logique pour changer le mot de passe dans la base de données
+            return 'Mot de passe changé avec succès.'
+        return render_template('reset_password.html')  # Formulaire pour entrer le nouveau mot de passe
+    except Exception as e:
+        return f"Le lien de réinitialisation est invalide ou a expiré : {e}"
+
+@app.route('/login/spotify')
+def spotify_login():
+    redirect_uri = url_for('spotify_authorize', _external=True)
+    return spotify.authorize_redirect(
+        redirect_uri,
+        show_dialog='true',  # Force l'affichage même si déjà connecté
+        prompt='consent'  # Force la demande de consentement
+    )
+@app.route('/auth/spotify/callback')
+def spotify_authorize():
+    try:
+        token = spotify.authorize_access_token()
+        resp = spotify.get('me', token=token)
+        user_info = resp.json()
+        
+        user = session.get('user')
+        user_id = user['id']
+        if user_id:
+            conn = get_db_connection()
+            
+            # Stockage du token d'accès et du refresh token si disponible
+            conn.execute('UPDATE users SET spotify_id = ? WHERE id = ?', 
+                        (token['access_token'], user_id))
+            conn.commit()
+            conn.close()
+            print('Token Spotify :', token)
+            print('Spotify token successfully saved for user:', user_id)
+            print('User Spotify Info:', user_info)
+        else:
+            print('Error: No user_id found in session')
+        return redirect('http://localhost:8081/link_accounts')
+        
+    except Exception as e:
+        print(f"Error during Spotify authorization: {str(e)}")
+        return redirect('http://localhost:8081/link_accounts')
 
 def get_db_connection():
     db_path = os.path.join(os.path.dirname(__file__), 'database', 'database.db')
@@ -286,53 +397,50 @@ def handle_add_area():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-
 @app.route('/update-user-info', methods=['PUT'])
 def update_user_info():
     if 'user' not in session:
         return jsonify({"error": "User not authenticated"}), 401
-    
+
     user = session.get('user')
     user_id = user['id']
-    
+
     data = request.get_json()
     new_username = data.get('username')
     new_email = data.get('email')
     new_bio = data.get('bio')
-    
+
     conn = get_db_connection()
-    
+
     update_fields = []
     params = []
-    
-    # Vérifier si le champ existe dans la requête, pas sa valeur
+
     if 'username' in data:
         update_fields.append('username = ?')
         params.append(new_username)
-    
+
     if 'email' in data:
         update_fields.append('email = ?')
         params.append(new_email)
-    
-    # Permettre la mise à jour de la bio même si elle est vide
+
     if 'bio' in data:
         update_fields.append('bio = ?')
         params.append(new_bio)
-    
+
     if not update_fields:
         return jsonify({"error": "No valid data provided to update"}), 400
-    
+
     params.append(user_id)
-    
+
     query = f'UPDATE users SET {", ".join(update_fields)} WHERE id = ?'
-    
+
     conn.execute(query, params)
     conn.commit()
     conn.close()
-    
+
     if 'email' in data:
         session['user']['email'] = new_email
-    
+
     return jsonify({"message": "User info updated successfully"}), 200
 
 
@@ -388,6 +496,87 @@ def google_authorize():
     session['user'] = user_data
 
     return redirect('http://localhost:8081/home')
+
+@app.route('/disconnect-telegram')
+def disconnect_telegram():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    user_id = session['user']['id']
+    try:
+        conn = get_db_connection()
+        conn.execute(
+            "UPDATE users SET telegram_chat_id = ?, telegram_API_token = ? WHERE id = ?",
+            (1646361418, '6808144152:AAE3pgrw2pUbqsXv2s-DtYcP4k2Sre5dd-c', user_id)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Successfully disconnected from Telegram"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/disconnect-discord')
+def disconnect_discord():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    user_id = session['user']['id']
+    try:
+        conn = get_db_connection()
+        conn.execute(
+            "UPDATE users SET discord_id = NULL WHERE id = ?",
+            (user_id,)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Successfully disconnected from Discord"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/disconnect-spotify')
+def disconnect_spotify():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    user_id = session['user']['id']
+    try:
+        conn = get_db_connection()
+        conn.execute(
+            "UPDATE users SET spotify_id = NULL WHERE id = ?",
+            (user_id,)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Successfully disconnected from Spotify"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/connect-telegram', methods=['POST'])
+def connect_telegram():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+    
+    data = request.get_json()
+    chat_id = data.get('chatId')
+    api_token = data.get('apiToken')
+    
+    if not chat_id or not api_token:
+        return jsonify({"error": "Missing required fields"}), 400
+    
+    user_id = session['user']['id']
+    
+    try:
+        conn = get_db_connection()
+        conn.execute(
+            'UPDATE users SET telegram_chat_id = ?, telegram_API_token = ? WHERE id = ?',
+            (chat_id, api_token, user_id)
+        )
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"message": "Telegram connected successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/login/discord')
 def discord_login():
@@ -445,53 +634,13 @@ def is_connected_telegram():
     user_id = session['user']['id']
     
     conn = get_db_connection()
-    user = conn.execute('SELECT telegram_id FROM users WHERE id = ?', (user_id,)).fetchone()
+    user = conn.execute('SELECT telegram_chat_id FROM users WHERE id = ?', (user_id,)).fetchone()
     conn.close()
 
-    if user and user['telegram_id']:  # Vérifie si le champ telegram_id n'est pas vide
+    if user and user['telegram_chat_id'] and user['telegram_chat_id'] != 1646361418:  # Vérifie si le champ telegram_id n'est pas vide
         return jsonify({"connected": True})
     else:
         return jsonify({"connected": False})
-    
-@app.route('/login/spotify')
-def spotify_login():
-    redirect_uri = url_for('spotify_authorize', _external=True)
-    return spotify.authorize_redirect(
-        redirect_uri,
-        show_dialog='true',  # Force l'affichage même si déjà connecté
-        prompt='consent'  # Force la demande de consentement
-    )
-
-@app.route('/auth/spotify/callback')
-def spotify_authorize():
-    try:
-        token = spotify.authorize_access_token()
-        resp = spotify.get('me', token=token)
-        user_info = resp.json()
-        
-        user = session.get('user')
-        user_id = user['id']
-
-        if user_id:
-            conn = get_db_connection()
-            
-            # Stockage du token d'accès et du refresh token si disponible
-            conn.execute('UPDATE users SET spotify_id = ? WHERE id = ?', 
-                        (token['access_token'], user_id))
-            conn.commit()
-            conn.close()
-
-            print('Token Spotify :', token)
-            print('Spotify token successfully saved for user:', user_id)
-            print('User Spotify Info:', user_info)
-        else:
-            print('Error: No user_id found in session')
-
-        return redirect('http://localhost:8081/link_accounts')
-        
-    except Exception as e:
-        print(f"Error during Spotify authorization: {str(e)}")
-        return redirect('http://localhost:8081/link_accounts')
 
 # Route pour vérifier la connexion Spotify
 @app.route('/is-connected-spotify', methods=['GET'])

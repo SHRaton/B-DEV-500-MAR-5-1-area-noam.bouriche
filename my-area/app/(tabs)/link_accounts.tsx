@@ -1,57 +1,104 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, Image, Platform, Linking, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import TelegramForm from './TelegramForm';
 
 export default function AuthPage() {
+  const [showTelegramForm, setShowTelegramForm] = useState(false);
   const [discordStatus, setDiscordStatus] = useState(false);
   const [telegramStatus, setTelegramStatus] = useState(false);
   const [spotifyStatus, setSpotifyStatus] = useState(false);
-  const [loading, setLoading] = useState(true); // État de chargement
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const checkAllConnections = async () => {
+  const checkAllConnections = async () => {
+    try {
       await Promise.all([
         checkConnectionStatus('discord', setDiscordStatus),
         checkConnectionStatus('telegram', setTelegramStatus),
         checkConnectionStatus('spotify', setSpotifyStatus),
       ]);
-      setLoading(false); // Fin du chargement
-    };
+    } catch (error) {
+      console.error('Error checking connections:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     checkAllConnections();
   }, []);
 
   const checkConnectionStatus = async (service, setStatus) => {
     try {
       const response = await fetch(`http://localhost:5000/is-connected-${service}`, {
-        credentials: 'include', // Inclure les cookies si nécessaire
+        credentials: 'include',
       });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      setStatus(data.connected); 
+      setStatus(data.connected);
     } catch (error) {
       console.error(`Error checking ${service} connection:`, error);
+      setStatus(false);
+    }
+  };
+
+  const handleDisconnect = async (service, setStatus) => {
+    console.log("okokokok")
+    try {
+      const response = await fetch(`http://localhost:5000/disconnect-${service}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      setStatus(false);
+      // Refresh connection status after disconnecting
+      await checkAllConnections();
+    } catch (error) {
+      console.error(`Error disconnecting ${service}:`, error);
     }
   };
 
   const handleLogin = (service) => {
-    const loginURL = `http://localhost:5000/login/${service}`;
-    if (Platform.OS === 'web') {
-      window.location.href = loginURL;
+    if (service === 'telegram') {
+      setShowTelegramForm(true);
     } else {
-      Linking.openURL(loginURL);
+      const loginURL = `http://localhost:5000/login/${service}`;
+      if (Platform.OS === 'web') {
+        window.location.href = loginURL;
+      } else {
+        Linking.openURL(loginURL);
+      }
     }
   };
 
-  const renderServiceRow = (serviceName, logoSource, status, onPress) => (
+  const renderServiceRow = (serviceName, logoSource, status, setStatus) => (
     <View style={styles.serviceRow}>
       <Image source={logoSource} style={styles.logo} />
-      <Pressable style={styles.button} onPress={onPress}>
-        <Text style={styles.buttonText}>Login with {serviceName}</Text>
-        <Text style={[styles.status, status ? styles.connected : styles.disconnected]}>
-          {status ? 'Connected' : 'Not connected'}
-        </Text>
-      </Pressable>
+      <View style={styles.buttonContainer}>
+        <Pressable 
+          style={styles.button} 
+          onPress={() => handleLogin(serviceName.toLowerCase())}
+        >
+          <Text style={styles.buttonText}>Login with {serviceName}</Text>
+          <Text style={[styles.status, status ? styles.connected : styles.disconnected]}>
+            {status ? 'Connected' : 'Not connected'}
+          </Text>
+        </Pressable>
+        
+        {status && (
+          <Pressable 
+            style={styles.disconnectButton}
+            onPress={() => handleDisconnect(serviceName.toLowerCase(), setStatus)}
+          >
+            <Text style={styles.disconnectText}>Disconnect</Text>
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 
@@ -73,10 +120,20 @@ export default function AuthPage() {
         <ActivityIndicator size="large" color="#7289da" />
       ) : (
         <>
-          {renderServiceRow('Discord', require('../../assets/logos/discord.png'), discordStatus, () => handleLogin('discord'))}
-          {renderServiceRow('Telegram', require('../../assets/logos/telegram.png'), telegramStatus, () => handleLogin('telegram'))}
-          {renderServiceRow('Spotify', require('../../assets/logos/spotify.png'), spotifyStatus, () => handleLogin('spotify'))}
+          {renderServiceRow('Discord', require('../../assets/logos/discord.png'), discordStatus, setDiscordStatus)}
+          {renderServiceRow('Telegram', require('../../assets/logos/telegram.png'), telegramStatus, setTelegramStatus)}
+          {renderServiceRow('Spotify', require('../../assets/logos/spotify.png'), spotifyStatus, setSpotifyStatus)}
         </>
+      )}
+      
+      {showTelegramForm && (
+        <TelegramForm 
+          onClose={() => setShowTelegramForm(false)}
+          onSuccess={async () => {
+            setShowTelegramForm(false);
+            await checkAllConnections();
+          }}
+        />
       )}
     </View>
   );
@@ -92,6 +149,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 200,
+  },
+  buttonContainer: {
+    flex: 1,
+  },
+  disconnectButton: {
+    backgroundColor: '#ff4444',
+    padding: 7,
+    borderRadius: 5,
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  disconnectText: {
+    color: 'white',
+    fontSize: 14,
   },
   back: {
     marginRight: 10,
