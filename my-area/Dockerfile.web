@@ -1,0 +1,19 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Installation des dépendances globales
+RUN npm install -g expo-cli @expo/cli
+
+# Copie des fichiers de configuration
+COPY package*.json ./
+
+# Installation des dépendances du projet
+RUN npm install
+
+# Copie du reste du code source
+COPY . .
+
+EXPOSE 8081
+
+CMD ["npx", "expo", "start", "--web", "--port", "8081"]

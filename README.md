@@ -44,37 +44,8 @@ figured
 - Expo 🚀
 
 
-## Installation & Running
+## Installation & Running 🛠️
 
-### Method 1: Manual Setup
-
-#### Backend Setup
-```bash
-python -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r my-area/back/requirements.txt
-
-# Run the server
-python my-area/back/app.py
-```
-The backend server will start on port 5000
-
-#### Frontend Setup
-```bash
-# In a new terminal, navigate to the project directory
-cd my-area
-
-# Install dependencies
-npm install
-
-# Start the application
-npx expo start --web
-```
-The frontend application will be available on port 8081
-
-### Method 2: Using Docker
 
 ```bash
 # Build and start the containers

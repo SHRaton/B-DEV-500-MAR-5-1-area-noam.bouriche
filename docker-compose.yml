@@ -1,20 +1,38 @@
-version: '3'
-
 services:
   server:
     build:
-      context: ./app/server
+      context: ./my-area/back
       dockerfile: Dockerfile
     ports:
-      - '8080:8080'
+      - '5000:5000'  # Modifié de 8080:8080 à 5000:5000
     environment:
       - FLASK_ENV=development
+      - FLASK_APP=app.py
+      - PORT=5000    # Ajouté pour expliciter le port
+    volumes:
+      - ./my-area/back:/app
+    networks:
+      - area-network
 
-  react_web:
+  react_native:
     build:
-      context: ./app/web
-      dockerfile: Dockerfile
+      context: ./my-area
+      dockerfile: Dockerfile.web
     ports:
-      - '8081:80'
+      - '8081:8081'
+    environment:
+      - NODE_ENV=development
+      - PORT=8081
+      - WDS_SOCKET_PORT=0
+      - REACT_APP_API_URL=http://server:5000  # URL du serveur sur le port 5000
+    volumes:
+      - ./my-area:/app
+      - /app/node_modules
     depends_on:
       - server
+    networks:
+      - area-network
+
+networks:
+  area-network:
+    driver: bridge
