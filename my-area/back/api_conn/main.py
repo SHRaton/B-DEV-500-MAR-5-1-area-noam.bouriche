@@ -41,7 +41,9 @@ class DataStruct:
         self.city = "Paris"
         self.return_info = "rain_1h"
         self.return_trigger = "0"
-
+        #data from react
+        self.translated_text = ""
+        self.is_a_translated_text = False
 #############################################################################################################################################
 
     def get_data_from_bd(self):
@@ -137,8 +139,11 @@ class DataStruct:
     def multi_react(self):
         for i in self.react_n:
             if i == 1:
-                print(translate_to(self.text, self.lang))
+                self.translated_text = translate_to(self.text, self.lang)
+                self.is_a_translated_text = True
             elif i == 2:
+                if self.is_a_translated_text == True:
+                    self.discord_mess = self.translated_text
                 self.send_message()
             elif i == 3:
                 print(get_user_playlists())
