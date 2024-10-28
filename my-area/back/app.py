@@ -368,6 +368,7 @@ def handle_register():
 @app.route('/add-area', methods=['POST'])
 def handle_add_area():
     data = request.json
+    print(data)
 
     # Extraire les données du corps de la requête
     isActive = data.get('isActive', True)
@@ -380,19 +381,23 @@ def handle_add_area():
     name = data.get('name')
     description = data.get('description')
 
+    action = data.get(f'selectedApi')
+    action_info = data.get(f'selectedApiAction')
+
     # Extraire les réactions et leurs informations
     reactions = []
     for i in range(1, 7):  # Pour les 6 réactions possibles
         reaction = data.get(f'reaction_{i}')
         reaction_info = data.get(f'reaction_{i}_info')
+        isActive_reaction = True
         if reaction:
-            reactions.extend([reaction, reaction_info])
+            reactions.extend([reaction, reaction_info, isActive_reaction])
         else:
-            reactions.extend([None, None])
+            reactions.extend([None, None, False])
 
 
     try:
-        add_area(isActive, isPublic, user_id, name, description, *reactions)
+        add_area(isActive, isPublic, user_id, name, description, action, action_info, *reactions)
         return jsonify({"message": "Area added successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -689,7 +694,6 @@ def get_areas():
         return jsonify({"error": "Invalid session data"}), 400
     
     user_id = user['id']
-    add_area(True, user_id, "zobi", "action1", "react1", "react2", "react3", None, None, None)
     
     conn = get_db_connection()
     areas = conn.execute('SELECT * FROM areas WHERE user_id = ?', (user_id,)).fetchall()
