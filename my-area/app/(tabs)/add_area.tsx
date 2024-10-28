@@ -8,6 +8,8 @@ const AddArea = () => {
   const [description, setDescription] = useState('');
   const [selectedApi, setSelectedApi] = useState<string | null>(null);
   const [selectedApiAction, setSelectedApiAction] = useState<string | null>(null);
+  const [showStreamerInput, setShowStreamerInput] = useState(false);
+  const [streamerName, setStreamerName] = useState('');
   const [reactions, setReactions] = useState<{ logo: string, name: string }[]>(Array(6).fill({ logo: 'none', name: 'None' }));
   const [showServiceModal, setShowServiceModal] = useState(false); // Affichage de la pop-up pour ajouter une réaction
   const [currentReactionIndex, setCurrentReactionIndex] = useState<number | null>(null); // Indice de la réaction en cours d'ajout
@@ -17,6 +19,27 @@ const AddArea = () => {
   const router = useRouter();
   const MAX_REACTIONS = 6;
 
+  const [showMissingRequirementsModal, setShowMissingRequirementsModal] = useState(false);
+  const [missingRequirements, setMissingRequirements] = useState([]);
+  const requiredReactions = {
+    spotify: ['discord', 'telegram', 'deepl'],
+    deepl: ['discord', 'telegram'],
+  };
+
+  // Check missing reactions for the selected reactions
+  const getMissingReactions = () => {
+    let missing = [];
+    reactions.forEach(reaction => {
+      if (reaction.name === 'Recuperer les 5 top titres' && !requiredReactions.spotify.some(req => reactions.some(r => r.logo.toLowerCase() === req.toLowerCase()))) {
+        missing.push("Spotify output requires a reaction with Discord, Telegram, or Deepl.");
+      }
+      if (reaction.name === 'Traduction' && reaction.logo === 'deepl' && !requiredReactions.deepl.some(req => reactions.some(r => r.logo.toLowerCase() === req.toLowerCase()))) {
+        missing.push("Deepl translation requires a reaction with Discord or Telegram.");
+      }
+    });
+    return missing;
+  };
+
   // Navigation entre les étapes
   const goNextStep = () => {
     // Vérification si l'un des champs est vide
@@ -24,8 +47,7 @@ const AddArea = () => {
       setError('Veuillez remplir tous les champs.');
       return;
     }
-  
-    setError(''); // Réinitialise l'erreur si les champs sont remplis    
+    setError(''); // Réinitialise l'erreur si les champs sont remplis
     setStep((prev) => prev + 1);
   }
   const goPreviousStep = () => setStep((prev) => prev - 1);
@@ -73,6 +95,12 @@ const AddArea = () => {
 
   // Soumettre l'area une fois que tout est configuré
   const handleSubmitArea = async () => {
+    const missing = getMissingReactions();
+    if (missing.length > 0) {
+      setMissingRequirements(missing);
+      setShowMissingRequirementsModal(true);
+      return;
+    }
     const areaData = {
       isActive: true,
       isPublic: false,
@@ -110,6 +138,11 @@ const AddArea = () => {
       console.error('Error adding area:', error);
       setError('Failed to add area. Please try again.');
     }
+  };
+
+  const handleTwitchActionSelect = () => {
+    setSelectedApiAction('Streamer starts a stream');
+    setShowStreamerInput(true); // Show the input field for Twitch
   };
 
   // Contenu dynamique selon l'étape actuelle
@@ -150,10 +183,6 @@ const AddArea = () => {
             <>
               <Text style={styles.subtitle}>Choisir une action de départ</Text>
               <View style={styles.serviceContainer}>
-                <Pressable style={styles.serviceBox} onPress={() => setSelectedApi('Riot Games')}>
-                  <Image source={require('../../assets/logos/riot_games.png')} style={styles.serviceImage} resizeMode="contain"/>
-                  <Text style={styles.serviceText}>Riot Games</Text>
-                </Pressable>
                 <Pressable style={styles.serviceBox} onPress={() => setSelectedApi('Twitch')}>
                   <Image source={require('../../assets/logos/twitch.png')} style={styles.serviceImage} resizeMode="contain"/>
                   <Text style={styles.serviceText}>Twitch</Text>
@@ -181,46 +210,39 @@ const AddArea = () => {
                         <Image source={require('../../assets/images/cross.png')} style={styles.cross}/>
                       </Pressable>
                       <Text style={styles.modalTitle}>Choisir une action pour {selectedApi}</Text>
-
-                      {selectedApi === 'Riot Games' && (
-                        <>
-                          <Pressable 
-                            onPress={() => {
-                              setSelectedApiAction('Game ended');
-                              setShowSubServiceModal(false); // Fermer la modale
-                              goNextStep(); // Aller à l'étape suivante
-                            }}>
-                            <Text style={styles.optionText}>Game ended</Text>
-                          </Pressable>
-                          <Pressable 
-                            onPress={() => {
-                              setSelectedApiAction('Rank changed');
-                              setShowSubServiceModal(false); // Fermer la modale
-                              goNextStep(); // Aller à l'étape suivante
-                            }}>
-                            <Text style={styles.optionText}>Rank changed</Text>
-                          </Pressable>
-                        </>
-                      )}
                       {selectedApi === 'Twitch' && (
                         <>
-                          <Pressable 
-                            onPress={() => {
-                              setSelectedApiAction('Streamer starts a stream');
-                              setShowSubServiceModal(false); // Fermer la modale
-                              goNextStep(); // Aller à l'étape suivante
-                            }}>
+                          <Pressable onPress={handleTwitchActionSelect}>
                             <Text style={styles.optionText}>Streamer starts a stream</Text>
                           </Pressable>
+                          {showStreamerInput && (
+                            <View style={styles.inputContainer}>
+                              <TextInput
+                                style={styles.input}
+                                placeholder="Streamer Name"
+                                value={streamerName}
+                                onChangeText={setStreamerName}
+                              />
+                              <Pressable style={styles.button}
+                                onPress={() => {
+                                setSelectedApi('IS_STREAMING');
+                                setSelectedApiAction(streamerName);
+                                setShowSubServiceModal(false);
+                                goNextStep();
+                              }}>
+                                <Text style={styles.buttonText}>Next</Text>
+                              </Pressable>
+                            </View>
+                          )}
                         </>
                       )}
                       {selectedApi === 'Gecko' && (
                         <>
                           <Pressable 
                             onPress={() => {
-                              setSelectedApiAction('Bitcoin increased');
-                              setShowSubServiceModal(false); // Fermer la modale
-                              goNextStep(); // Aller à l'étape suivante
+                              setSelectedApi('BTC');
+                              setShowSubServiceModal(false);
+                              goNextStep();
                             }}>
                             <Text style={styles.optionText}>The price of bitcoin has increased</Text>
                           </Pressable>
@@ -230,9 +252,9 @@ const AddArea = () => {
                         <>
                           <Pressable 
                             onPress={() => {
-                              setSelectedApiAction('Message received');
-                              setShowSubServiceModal(false); // Fermer la modale
-                              goNextStep(); // Aller à l'étape suivante
+                              setSelectedApi('DETECT_MESSAGE');
+                              setShowSubServiceModal(false);
+                              goNextStep();
                             }}>
                             <Text style={styles.optionText}>Message received</Text>
                           </Pressable>
@@ -242,19 +264,19 @@ const AddArea = () => {
                         <>
                           <Pressable 
                             onPress={() => {
-                              setSelectedApiAction('Raining Time');
-                              setShowSubServiceModal(false); // Fermer la modale
-                              goNextStep(); // Aller à l'étape suivante
+                              setSelectedApi('IS_RAINING');
+                              setShowSubServiceModal(false);
+                              goNextStep();
                             }}>
                             <Text style={styles.optionText}>Raining Time</Text>
                           </Pressable>
                           <Pressable 
                             onPress={() => {
-                              setSelectedApiAction('Sunset Time');
-                              setShowSubServiceModal(false); // Fermer la modale
-                              goNextStep(); // Aller à l'étape suivante
+                              setSelectedApi('IS_NIGHT');
+                              setShowSubServiceModal(false);
+                              goNextStep();
                             }}>
-                            <Text style={styles.optionText}>Sunset Time</Text>
+                            <Text style={styles.optionText}>Night Time</Text>
                           </Pressable>
                         </>
                       )}
@@ -284,6 +306,47 @@ const AddArea = () => {
             {/* Afficher la section des informations uniquement si une réaction a été sélectionnée */}
             {reaction.name !== 'None' && (
               <View style={styles.informationBox}>
+                {reaction.name === 'Traduction' && reaction.logo === 'deepl' && (
+                  <>
+                    <Text style={styles.informationTitle}>Langue finale</Text>
+                    <TextInput
+                      style={styles.messageInputLarge}
+                      placeholder="En quelle langue souhaitez vous traduire votre texte ?"
+                      value={reaction.langue || ''}
+                      onChangeText={(text) => {
+                        const updatedReactions = [...reactions];
+                        updatedReactions[index].langue = text; // Mettre à jour le message pour cette réaction
+                        setReactions(updatedReactions);
+                      }}
+                    />
+                    <Text style={styles.informationTitle}>Texte à traduire</Text>
+                    <TextInput
+                      style={styles.messageInputLarge}
+                      placeholder="Quel texte souhaitez-vous traduire ?"
+                      value={reaction.message || ''}
+                      onChangeText={(text) => {
+                        const updatedReactions = [...reactions];
+                        updatedReactions[index].message = text; // Mettre à jour le message pour cette réaction
+                        setReactions(updatedReactions);
+                      }}
+                    />
+                  </>
+                )}
+                {reaction.name === 'Envoyer un message' && reaction.logo === 'telegram' && (
+                  <>
+                    <Text style={styles.informationTitle}>Message à envoyer</Text>
+                    <TextInput
+                      style={styles.messageInputLarge}
+                      placeholder="Quel message souhaitez-vous envoyer ?"
+                      value={reaction.message || ''}
+                      onChangeText={(text) => {
+                        const updatedReactions = [...reactions];
+                        updatedReactions[index].message = text;
+                        setReactions(updatedReactions);
+                      }}
+                    />
+                  </>
+                )}
                 {reaction.name === 'Envoyer un message privé' && reaction.logo === 'discord' && (
                   <>
                     <Text style={styles.informationTitle}>Personne a qui envoyer</Text>
@@ -342,6 +405,21 @@ const AddArea = () => {
           </View>
         ))}
       </View>
+
+      {/* Modal for missing requirements */}
+      <Modal visible={showMissingRequirementsModal} transparent={true} animationType="slide">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Conditions manquantes</Text>
+            {missingRequirements.map((requirement, index) => (
+              <Text key={index} style={styles.missingText}>{requirement}</Text>
+            ))}
+            <Pressable onPress={() => setShowMissingRequirementsModal(false)} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Fermer</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <Pressable style={styles.button} onPress={handleSubmitArea}>
         <Text style={styles.buttonText}>Terminer et ajouter l'area</Text>
@@ -439,7 +517,7 @@ const AddArea = () => {
         </View>
       </Modal>
     </>
-  );        
+  );
       default:
         return null;
     }
@@ -576,7 +654,7 @@ const styles = StyleSheet.create({
   },
   serviceContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     width: '100%',
     marginVertical: 20,
   },
@@ -660,6 +738,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
+    marginTop: 10,
     color: '#007bff',
   },
   messageInputLarge: {
@@ -671,6 +750,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     fontSize: 16,
   },
+
+  inputContainer: {
+    width: '100%',
+    backgroundColor: '#f0f0f0',
+    padding: 15,
+    borderRadius: 12,
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    alignItems: 'center',
+  },
+
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -718,7 +812,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-
-
 
 export default AddArea;
