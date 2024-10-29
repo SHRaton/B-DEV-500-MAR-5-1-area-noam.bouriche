@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session, redirect, url_for
+from flask import Flask, request, jsonify, session, redirect, url_for, send_from_directory
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from authlib.integrations.flask_client import OAuth
 from werkzeug.security import check_password_hash
@@ -17,6 +17,9 @@ import os
 app = Flask(__name__)
 app.secret_key = 'ratonisthegoat'
 CORS(app, supports_credentials=True, origins=['http://localhost:8081'])
+
+FILE_DIRECTORY = '../assets/sdk'
+FILENAME = 'area.apk'
 
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 app.config['SESSION_COOKIE_SECURE'] = True
@@ -337,6 +340,13 @@ def handle_about_json():
         }
     }
     return jsonify(response)
+
+@app.route('/area.apk', methods=['GET'])
+def download_sdk():
+    try:
+        return send_from_directory(FILE_DIRECTORY, FILENAME, as_attachment=True)
+    except FileNotFoundError:
+        return "File not found", 404
 
 @app.route('/get-user-info', methods=['GET'])
 def get_user_info():
