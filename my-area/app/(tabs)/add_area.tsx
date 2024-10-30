@@ -10,7 +10,7 @@ const AddArea = () => {
   const [selectedApiAction, setSelectedApiAction] = useState<string | null>(null);
   const [showStreamerInput, setShowStreamerInput] = useState(false);
   const [streamerName, setStreamerName] = useState('');
-  const [reactions, setReactions] = useState<{ logo: string, name: string }[]>(Array(6).fill({ logo: 'none', name: 'None' }));
+  const [reactions, setReactions] = useState<{ logo: string, name: string, description: string }[]>(Array(6).fill({ logo: 'none', name: 'None', description: 'None' }));
   const [showServiceModal, setShowServiceModal] = useState(false); // Affichage de la pop-up pour ajouter une réaction
   const [currentReactionIndex, setCurrentReactionIndex] = useState<number | null>(null); // Indice de la réaction en cours d'ajout
   const [showSubServiceModal, setShowSubServiceModal] = useState(false);
@@ -28,16 +28,31 @@ const AddArea = () => {
 
   // Check missing reactions for the selected reactions
   const getMissingReactions = () => {
-    let missing = [];
-    reactions.forEach(reaction => {
-      if (reaction.name === 'Recuperer les 5 top titres' && !requiredReactions.spotify.some(req => reactions.some(r => r.logo.toLowerCase() === req.toLowerCase()))) {
-        missing.push("Spotify output requires a reaction with Discord, Telegram, or Deepl.");
+    const missing = []; // Initialiser un tableau vide pour stocker les messages d'erreur
+    // Parcourir les réactions pour vérifier les exigences
+    for (let i = 0; i < reactions.length; i++) {
+      const reaction = reactions[i];
+      // Vérifier si la réaction actuelle est Spotify
+      if (reaction.logo === 'spotify') {
+        // Vérifier s'il y a une réaction suivante
+        if (i + 1 < reactions.length) {
+          const nextReaction = reactions[i + 1];
+          // Vérifier si la réaction suivante est l'une des réactions requises
+          if (!requiredReactions.spotify.some(req => nextReaction.logo.toLowerCase() === req.toLowerCase())) {
+            missing.push("Spotify output requires the next reaction to be Discord, Telegram, or Deepl.");
+          }
+        } else {
+          missing.push("Spotify output requires a following reaction.");
+        }
       }
-      if (reaction.name === 'Traduction' && reaction.logo === 'deepl' && !requiredReactions.deepl.some(req => reactions.some(r => r.logo.toLowerCase() === req.toLowerCase()))) {
-        missing.push("Deepl translation requires a reaction with Discord or Telegram.");
+      // Vérifier les exigences pour Deepl
+      if (reaction.name === 'Deepl_1' && reaction.logo === 'deepl') {
+        if (!requiredReactions.deepl.some(req => reactions.some(r => r.logo.toLowerCase() === req.toLowerCase()))) {
+          missing.push("Deepl translation requires a reaction with Discord or Telegram.");
+        }
       }
-    });
-    return missing;
+    }
+    return missing; // Retourner les messages d'erreur trouvés
   };
 
   // Navigation entre les étapes
@@ -80,7 +95,35 @@ const AddArea = () => {
   const handleSubServiceSelect = (subService: string, logo: string) => {
     if (currentReactionIndex !== null) {
       const updatedReactions = [...reactions];
-      updatedReactions[currentReactionIndex] = { logo, name: subService };
+      let desc = "";
+      if (subService == "Deepl_1") {
+        desc = "Traduction";
+      }
+      if (subService == "Discord_1") {
+        desc = "Envoyer un message privé";
+      }
+      if (subService == "Discord_1") {
+        desc = "Envoyer un message dans un channel";
+      }
+      if (subService == "Spotify_1") {
+        desc = "Recuperer les playlists";
+      }
+      if (subService == "Spotify_2") {
+        desc = "Recuperer les 5 top titres";
+      }
+      if (subService == "Spotify_3") {
+        desc = "Recuperer les 10 recommendations de sons";
+      }
+      if (subService == "Spotify_4") {
+        desc = "Recuperer les 10 recommendations d'artistes";
+      }
+      if (subService == "Spotify_5") {
+        desc = "Recuperer les derniers sons sortis";
+      }
+      if (subService == "Telegram_1") {
+        desc = "Envoyer un message dans un canal";
+      }
+      updatedReactions[currentReactionIndex] = { logo, name: subService, description: desc };
       setReactions(updatedReactions); // Mettre à jour les réactions avec la nouvelle sélection
       setCurrentReactionIndex(null);
       setShowSubServiceModal(false); // Fermer la sous-modale après avoir sélectionné
@@ -101,6 +144,7 @@ const AddArea = () => {
       setShowMissingRequirementsModal(true);
       return;
     }
+
     const areaData = {
       isActive: true,
       isPublic: false,
@@ -112,12 +156,17 @@ const AddArea = () => {
       ...reactions.reduce((acc, reaction, index) => {
         if (reaction.name !== 'None') {
           acc[`reaction_${index + 1}`] = reaction.name;
-          acc[`reaction_${index + 1}_info`] = reaction.message || reaction.info || '';
+          const reactionInfo = {};
+          if (reaction.info) reactionInfo.info = reaction.info;
+          if (reaction.message) reactionInfo.message = reaction.message;
+          if (reaction.person) reactionInfo.person = reaction.person;
+          if (reaction.langue) reactionInfo.langue = reaction.langue;
+          // Assigner l'objet JSON comme chaîne de caractères
+          acc[`reaction_${index + 1}_info`] = JSON.stringify(reactionInfo);
         }
         return acc;
       }, {})
     };
-
     try {
       const response = await fetch('http://localhost:5000/add-area', {
         method: 'POST',
@@ -300,13 +349,13 @@ const AddArea = () => {
             {/* Logo et nom du service */}
             <Pressable onPress={() => openReactionModal(index)} style={styles.reactionHeader}>
               <Image source={getLogoSource(reaction.logo)} style={styles.reactionLogoLarge} />
-              <Text style={styles.reactionTextLarge}>{reaction.name}</Text>
+              <Text style={styles.reactionTextLarge}>{reaction.description}</Text>
             </Pressable>
 
             {/* Afficher la section des informations uniquement si une réaction a été sélectionnée */}
             {reaction.name !== 'None' && (
               <View style={styles.informationBox}>
-                {reaction.name === 'Traduction' && reaction.logo === 'deepl' && (
+                {reaction.name === 'Deepl_1' && reaction.logo === 'deepl' && (
                   <>
                     <Text style={styles.informationTitle}>Langue finale</Text>
                     <TextInput
@@ -332,7 +381,7 @@ const AddArea = () => {
                     />
                   </>
                 )}
-                {reaction.name === 'Envoyer un message' && reaction.logo === 'telegram' && (
+                {reaction.name === 'Telegram_1' && reaction.logo === 'telegram' && (
                   <>
                     <Text style={styles.informationTitle}>Message à envoyer</Text>
                     <TextInput
@@ -347,7 +396,7 @@ const AddArea = () => {
                     />
                   </>
                 )}
-                {reaction.name === 'Envoyer un message privé' && reaction.logo === 'discord' && (
+                {reaction.name === 'Discord_1' && reaction.logo === 'discord' && (
                   <>
                     <Text style={styles.informationTitle}>Personne a qui envoyer</Text>
                     <TextInput
@@ -373,7 +422,7 @@ const AddArea = () => {
                     />
                   </>
                 )}
-                {reaction.name === 'Envoyer un message dans un channel' && reaction.logo === 'discord' && (
+                {reaction.name === 'Discord_2' && reaction.logo === 'discord' && (
                   <>
                     <Text style={styles.informationTitle}>Channel dans lequel envoyer</Text>
                     <TextInput
@@ -469,43 +518,43 @@ const AddArea = () => {
             <Text style={styles.modalTitle}>Sélectionnez une option pour {selectedService}</Text>
             {selectedService === 'Deepl' && (
               <>
-                <Pressable onPress={() => handleSubServiceSelect('Traduction', 'deepl')}>
+                <Pressable onPress={() => handleSubServiceSelect('Deepl_1', 'deepl')}>
                   <Text style={styles.optionText}>Traduction</Text>
                 </Pressable>
               </>
             )}
             {selectedService === 'Discord' && (
               <>
-                <Pressable onPress={() => handleSubServiceSelect('Envoyer un message privé', 'discord')}>
+                <Pressable onPress={() => handleSubServiceSelect('Discord_1', 'discord')}>
                   <Text style={styles.optionText}>Envoyer un message privé</Text>
                 </Pressable>
-                <Pressable onPress={() => handleSubServiceSelect('Envoyer un message dans un channel', 'discord')}>
+                <Pressable onPress={() => handleSubServiceSelect('Discord_2', 'discord')}>
                   <Text style={styles.optionText}>Envoyer un message dans un channel</Text>
                 </Pressable>
               </>
             )}
             {selectedService === 'Spotify' && (
               <>
-                <Pressable onPress={() => handleSubServiceSelect('Recuperer les playlists', 'spotify')}>
+                <Pressable onPress={() => handleSubServiceSelect('Spotify_1', 'spotify')}>
                   <Text style={styles.optionText}>Recuperer les playlists</Text>
                 </Pressable>
-                <Pressable onPress={() => handleSubServiceSelect('Recuperer les 5 top titres', 'spotify')}>
+                <Pressable onPress={() => handleSubServiceSelect('Spotify_2', 'spotify')}>
                   <Text style={styles.optionText}>Recuperer les 5 top titres</Text>
                 </Pressable>
-                <Pressable onPress={() => handleSubServiceSelect('Recuperer les 10 recommendations de sons', 'spotify')}>
+                <Pressable onPress={() => handleSubServiceSelect('Spotify_3', 'spotify')}>
                   <Text style={styles.optionText}>Recuperer les 10 recommendations de sons</Text>
                 </Pressable>
-                <Pressable onPress={() => handleSubServiceSelect('Recuperer les 10 recommendations dartistes', 'spotify')}>
+                <Pressable onPress={() => handleSubServiceSelect('Spotify_4', 'spotify')}>
                   <Text style={styles.optionText}>Recuperer les 10 recommendations d'artistes</Text>
                 </Pressable>
-                <Pressable onPress={() => handleSubServiceSelect('Recuperer les derniers sons sortis', 'spotify')}>
+                <Pressable onPress={() => handleSubServiceSelect('Spotify_5', 'spotify')}>
                   <Text style={styles.optionText}>Recuperer les derniers sons sortis</Text>
                 </Pressable>
               </>
             )}
             {selectedService === 'Telegram' && (
               <>
-                <Pressable onPress={() => handleSubServiceSelect('Envoyer un message', 'telegram')}>
+                <Pressable onPress={() => handleSubServiceSelect('Telegram_1', 'telegram')}>
                   <Text style={styles.optionText}>Envoyer un message</Text>
                 </Pressable>
               </>
