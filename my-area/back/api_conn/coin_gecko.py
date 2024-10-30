@@ -9,7 +9,6 @@ def check_btc_increase(raise_percentage):
         response = requests.get(url)
         try:
             data = response.json()
-            print(data)
             return data['bitcoin']['usd']
         except KeyError:
             print("Key 'bitcoin' not found in the response.")
