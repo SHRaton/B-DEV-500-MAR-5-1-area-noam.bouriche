@@ -13,6 +13,7 @@ import sqlite3
 import smtplib
 import time
 import os
+import requests
 
 app = Flask(__name__)
 app.secret_key = 'ratonisthegoat'
@@ -391,7 +392,7 @@ def handle_add_area():
     name = data.get('name')
     description = data.get('description')
 
-    action = data.get(f'selectedApi')
+    action = data.get(f'selectedAction')
     action_info = data.get(f'selectedApiAction')
 
     # Extraire les réactions et leurs informations
@@ -609,11 +610,21 @@ def discord_authorize():
 
     if user_id:
         conn = get_db_connection()
-        
         # Mettre à jour le token discord pour l'utilisateur connecté dans la base de données
         conn.execute('UPDATE users SET discord_id = ? WHERE id = ?', (access_token, user_id))
         conn.commit()
         conn.close()
+
+        # Récupération des guilds de l'utilisateur
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
+        guilds_response = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=headers)
+        if guilds_response.status_code == 200:
+            guilds = guilds_response.json()
+            print('Guilds:', guilds)
+        else:
+            print('Failed to retrieve guilds', guilds_response.status_code)
 
         print('Token Discord :', token_discord)
         print('Discord token successfully saved for user:', user_id)
@@ -649,10 +660,10 @@ def is_connected_telegram():
     user_id = session['user']['id']
     
     conn = get_db_connection()
-    user = conn.execute('SELECT telegram_chat_id FROM users WHERE id = ?', (user_id,)).fetchone()
+    user = conn.execute('SELECT telegram_id FROM users WHERE id = ?', (user_id,)).fetchone()
     conn.close()
 
-    if user and user['telegram_chat_id'] and user['telegram_chat_id'] != 1646361418:  # Vérifie si le champ telegram_id n'est pas vide
+    if user and user['telegram_id'] and user['telegram_id'] != 1646361418:  # Vérifie si le champ telegram_id n'est pas vide
         return jsonify({"connected": True})
     else:
         return jsonify({"connected": False})

@@ -7,6 +7,7 @@ const AddArea = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedApi, setSelectedApi] = useState<string | null>(null);
+  const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [selectedApiAction, setSelectedApiAction] = useState<string | null>(null);
   const [showStreamerInput, setShowStreamerInput] = useState(false);
   const [streamerName, setStreamerName] = useState('');
@@ -62,6 +63,18 @@ const AddArea = () => {
       setError('Veuillez remplir tous les champs.');
       return;
     }
+    if (step == 2 && !streamerName && selectedApi == 'Twitch') {
+      setError('Give a name of streamer')
+      return;
+    }
+    if (step == 2 && streamerName && selectedApi == 'Twitch') {
+      setSelectedAction('IS_STREAMING');
+      setSelectedApiAction(streamerName);
+      setShowSubServiceModal(false);
+    } else if (step == 2) {
+      setSelectedApiAction('');
+    }
+    setSelectedApiAction
     setError(''); // Réinitialise l'erreur si les champs sont remplis
     setStep((prev) => prev + 1);
   }
@@ -87,9 +100,30 @@ const AddArea = () => {
         router.push('/');  // Redirige vers la page de login si non authentifié
       }
     };
-    
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    const updatedReactions = reactions.map((reaction, index) => {
+      // Check if the reaction needs "output" based on conditions
+      if (
+        (reaction.name === 'Discord_1' && reaction.logo === 'discord') ||
+        (reaction.name === 'Discord_2' && reaction.logo === 'discord') ||
+        (reaction.name === 'Telegram_1' && reaction.logo === 'telegram')
+      ) {
+        // Verify if previous reaction is Spotify or Deepl
+        if (index > 0 && (reactions[index - 1].logo === 'spotify' || reactions[index - 1].logo === 'deepl')) {
+          // Only set "output" if it isn't already
+          return { ...reaction, message: "output" };
+        }
+      }
+      return reaction;
+    });
+    // Update reactions only if they have changed
+    if (JSON.stringify(reactions) !== JSON.stringify(updatedReactions)) {
+      setReactions(updatedReactions);
+    }
+  }, [reactions]); // Dependency on `reactions` to trigger only when they change
 
   // Sélection d'une sous-réaction (option après le choix du service)
   const handleSubServiceSelect = (subService: string, logo: string) => {
@@ -102,7 +136,7 @@ const AddArea = () => {
       if (subService == "Discord_1") {
         desc = "Envoyer un message privé";
       }
-      if (subService == "Discord_1") {
+      if (subService == "Discord_2") {
         desc = "Envoyer un message dans un channel";
       }
       if (subService == "Spotify_1") {
@@ -130,6 +164,19 @@ const AddArea = () => {
     }
   };
 
+  const get_desc_from_action = (action: string) => {
+    if (action == 'IS_STREAMING')
+      return 'Streamer starts a stream > ';
+    if (action == 'BTC')
+      return 'The price of bitcoin has increased';
+    if (action == 'DETECT_MESSAGE')
+      return 'Message received';
+    if (action == 'IS_RAINING')
+      return 'Raining time';
+    if (action == 'IS_NIGHT')
+      return 'Night time';
+  }
+
   // Ouvrir la modale pour ajouter une nouvelle réaction
   const openReactionModal = (index: number) => {
     setCurrentReactionIndex(index);
@@ -150,7 +197,7 @@ const AddArea = () => {
       isPublic: false,
       name,
       description,
-      selectedApi,
+      selectedAction,
       selectedApiAction,
       // Map the reactions to the format expected by the API
       ...reactions.reduce((acc, reaction, index) => {
@@ -218,10 +265,8 @@ const AddArea = () => {
                 setError(''); // Effacer l'erreur lors de la saisie
               }}
             />
-            
             {/* Affichage du message d'erreur si un champ est manquant */}
             {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
-        
             <Pressable style={styles.button} onPress={goNextStep}>
               <Text style={styles.buttonText}>Suivant</Text>
             </Pressable>
@@ -266,6 +311,7 @@ const AddArea = () => {
                           </Pressable>
                           {showStreamerInput && (
                             <View style={styles.inputContainer}>
+                              {error ? <Text style={{ color: 'red' }}>{error}</Text> : null}
                               <TextInput
                                 style={styles.input}
                                 placeholder="Streamer Name"
@@ -274,9 +320,6 @@ const AddArea = () => {
                               />
                               <Pressable style={styles.button}
                                 onPress={() => {
-                                setSelectedApi('IS_STREAMING');
-                                setSelectedApiAction(streamerName);
-                                setShowSubServiceModal(false);
                                 goNextStep();
                               }}>
                                 <Text style={styles.buttonText}>Next</Text>
@@ -289,7 +332,7 @@ const AddArea = () => {
                         <>
                           <Pressable 
                             onPress={() => {
-                              setSelectedApi('BTC');
+                              setSelectedAction('BTC');
                               setShowSubServiceModal(false);
                               goNextStep();
                             }}>
@@ -301,7 +344,7 @@ const AddArea = () => {
                         <>
                           <Pressable 
                             onPress={() => {
-                              setSelectedApi('DETECT_MESSAGE');
+                              setSelectedAction('DETECT_MESSAGE');
                               setShowSubServiceModal(false);
                               goNextStep();
                             }}>
@@ -313,7 +356,7 @@ const AddArea = () => {
                         <>
                           <Pressable 
                             onPress={() => {
-                              setSelectedApi('IS_RAINING');
+                              setSelectedAction('IS_RAINING');
                               setShowSubServiceModal(false);
                               goNextStep();
                             }}>
@@ -321,7 +364,7 @@ const AddArea = () => {
                           </Pressable>
                           <Pressable 
                             onPress={() => {
-                              setSelectedApi('IS_NIGHT');
+                              setSelectedAction('IS_NIGHT');
                               setShowSubServiceModal(false);
                               goNextStep();
                             }}>
@@ -342,6 +385,12 @@ const AddArea = () => {
           case 3:
   return (
     <>
+      <View style={styles.actionContainer}>
+          <Image source={getLogoSource(selectedApi)} style={styles.actionLogoLarge} resizeMode="contain"/>
+          <Text style={styles.subtitleAction}>   {get_desc_from_action(selectedAction)}
+            {selectedApiAction ? <Text style={styles.subtitleAction}> {selectedApiAction}</Text> : null}
+          </Text>
+      </View>
       <Text style={styles.subtitle}>Ajouter des réactions</Text>
       <View style={styles.reactionContainer}>
         {reactions.map((reaction, index) => (
@@ -384,16 +433,20 @@ const AddArea = () => {
                 {reaction.name === 'Telegram_1' && reaction.logo === 'telegram' && (
                   <>
                     <Text style={styles.informationTitle}>Message à envoyer</Text>
-                    <TextInput
-                      style={styles.messageInputLarge}
-                      placeholder="Quel message souhaitez-vous envoyer ?"
-                      value={reaction.message || ''}
-                      onChangeText={(text) => {
-                        const updatedReactions = [...reactions];
-                        updatedReactions[index].message = text;
-                        setReactions(updatedReactions);
-                      }}
-                    />
+                    {index > 0 && (reactions[index - 1].logo === 'spotify' || reactions[index - 1].logo === 'deepl') ? (
+                      <Text style={styles.outputText}>OUTPUT</Text>
+                    ) : (
+                      <TextInput
+                        style={styles.messageInputLarge}
+                        placeholder="Quel message souhaitez-vous envoyer ?"
+                        value={reaction.message || ''}
+                        onChangeText={(text) => {
+                          const updatedReactions = [...reactions];
+                          updatedReactions[index].message = text;
+                          setReactions(updatedReactions);
+                        }}
+                      />
+                    )}
                   </>
                 )}
                 {reaction.name === 'Discord_1' && reaction.logo === 'discord' && (
@@ -405,21 +458,25 @@ const AddArea = () => {
                       value={reaction.person || ''}
                       onChangeText={(text) => {
                         const updatedReactions = [...reactions];
-                        updatedReactions[index].person = text; // Mettre à jour le message pour cette réaction
+                        updatedReactions[index].person = text;
                         setReactions(updatedReactions);
                       }}
                     />
                     <Text style={styles.informationTitle}>Message à envoyer</Text>
-                    <TextInput
-                      style={styles.messageInputLarge}
-                      placeholder="Quel message souhaitez-vous envoyer ?"
-                      value={reaction.message || ''}
-                      onChangeText={(text) => {
-                        const updatedReactions = [...reactions];
-                        updatedReactions[index].message = text; // Mettre à jour le message pour cette réaction
-                        setReactions(updatedReactions);
-                      }}
-                    />
+                    {index > 0 && (reactions[index - 1].logo === 'spotify' || reactions[index - 1].logo === 'deepl') ? (
+                      <Text style={styles.outputText}>OUTPUT</Text>
+                    ) : (
+                      <TextInput
+                        style={styles.messageInputLarge}
+                        placeholder="Quel message souhaitez-vous envoyer ?"
+                        value={reaction.message || ''}
+                        onChangeText={(text) => {
+                          const updatedReactions = [...reactions];
+                          updatedReactions[index].message = text;
+                          setReactions(updatedReactions);
+                        }}
+                      />
+                    )}
                   </>
                 )}
                 {reaction.name === 'Discord_2' && reaction.logo === 'discord' && (
@@ -436,16 +493,20 @@ const AddArea = () => {
                       }}
                     />
                     <Text style={styles.informationTitle}>Message à envoyer</Text>
-                    <TextInput
-                      style={styles.messageInputLarge}
-                      placeholder="message"
-                      value={reaction.message || ''}
-                      onChangeText={(text) => {
-                        const updatedReactions = [...reactions];
-                        updatedReactions[index].message = text; // Mettre à jour le message pour cette réaction
-                        setReactions(updatedReactions);
-                      }}
-                    />
+                    {index > 0 && (reactions[index - 1].logo === 'spotify' || reactions[index - 1].logo === 'deepl') ? (
+                      <Text style={styles.outputText}>OUTPUT</Text>
+                    ) : (
+                      <TextInput
+                        style={styles.messageInputLarge}
+                        placeholder="message"
+                        value={reaction.message || ''}
+                        onChangeText={(text) => {
+                          const updatedReactions = [...reactions];
+                          updatedReactions[index].message = text; // Mettre à jour le message pour cette réaction
+                          setReactions(updatedReactions);
+                        }}
+                      />
+                    )}
                   </>
                 )}
 
@@ -594,7 +655,8 @@ const AddArea = () => {
 
 // Fonction pour récupérer les logos en fonction du service
 const getLogoSource = (logoName: string) => {
-  switch (logoName) {
+  const normalizedLogoName = logoName.toLowerCase()
+  switch (normalizedLogoName) {
     case 'deepl':
       return require('../../assets/logos/deepl.png');
     case 'discord':
@@ -670,8 +732,12 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 20,
     color: '#333',
+    textAlign: 'center',
+  },
+  subtitleAction: {
+    fontSize: 18,
+    color: 'red',
     textAlign: 'center',
   },
   button: {
@@ -693,6 +759,14 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  outputText: {
+    color: 'green',
+    borderRadius: 5,
+    fontSize: 25,
+    justifyContent: 'center',
+    alignSelf: 'center',
     fontWeight: 'bold',
   },
   stepIndicator: {
@@ -736,13 +810,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-around',
-    marginVertical: 30,
+    marginVertical: 20,
+  },
+  actionContainer: {
+    width: '40%',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 15,
+    backgroundColor: '#d7d7d7',
+    borderRadius: 100,
+  },
+  actionLogoLarge: {
+    width: 60,
+    height: 60,
+    marginRight: 10,
   },
   reactionBox: {
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 25, // Plus de padding pour agrandir les cases
-    margin: 20,
+    margin: 10,
     width: 250, // Boîte plus large pour accueillir plus d'informations
     height: 400, // Hauteur augmentée
     alignItems: 'flex-start',
