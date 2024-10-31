@@ -31,7 +31,7 @@ const MyAreas: React.FC = () => {
         credentials: 'include',
       });
       const data = await response.json();
-      
+
       if (!data.authenticated) {
         router.push('/');
       }
@@ -160,11 +160,15 @@ const MyAreas: React.FC = () => {
           />
         </Pressable>
         <Text style={styles.title}>My Areas</Text>
+        <Pressable style={styles.addAreasButton} onPress={() => router.push("/add_area")}>
+          <Text style={styles.addAreasButtonText}>+ Add an Area</Text>
+        </Pressable>
       </View>
       <FlatList
         data={areas}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderArea}
+        contentContainerStyle={{ flexGrow: 1 }}
       />
 
       {/* Delete Confirmation Modal */}
@@ -204,6 +208,20 @@ const MyAreas: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  addAreasButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  addAreasButton: {
+    backgroundColor: '#2B211B',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginVertical: 10,
+    width: '10%',
+    alignItems: 'center',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -267,6 +285,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 20,
   },
   back: {
@@ -279,6 +298,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
+    marginRight: 1510,
   },
   areaContainer: {
     backgroundColor: '#f9f9f9',

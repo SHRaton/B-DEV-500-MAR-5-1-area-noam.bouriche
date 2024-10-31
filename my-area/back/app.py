@@ -717,9 +717,15 @@ def get_areas():
     user_id = user['id']
     
     conn = get_db_connection()
-    areas = conn.execute('SELECT * FROM areas WHERE user_id = ?', (user_id,)).fetchall()
+    # Mettre l'accent sur l'ordre décroissant pour avoir les plus récents en premier
+    areas = conn.execute('''
+        SELECT * FROM areas 
+        WHERE user_id = ? 
+        ORDER BY id DESC
+    ''', (user_id,)).fetchall()
     conn.close()
     
+    # Convertir en liste de dictionnaires
     areas_list = [dict(area) for area in areas]
     return jsonify(areas_list), 200
 
