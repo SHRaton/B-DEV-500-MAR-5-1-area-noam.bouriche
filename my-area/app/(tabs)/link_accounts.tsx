@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, Image, Platform, Linking, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LogOut, LogIn } from 'lucide-react';
 import TelegramForm from './TelegramForm';
 
 export default function AuthPage() {
@@ -77,55 +78,102 @@ export default function AuthPage() {
   };
 
   const renderServiceRow = (serviceName, logoSource, status, setStatus) => (
-    <View style={styles.serviceRow}>
-      <Image source={logoSource} style={styles.logo} />
-      <View style={styles.buttonContainer}>
-        <Pressable 
-          style={styles.button} 
-          onPress={() => handleLogin(serviceName.toLowerCase())}
-        >
-          <Text style={styles.buttonText}>Login with {serviceName}</Text>
-          <Text style={[styles.status, status ? styles.connected : styles.disconnected]}>
-            {status ? 'Connected' : 'Not connected'}
-          </Text>
-        </Pressable>
-        
-        {status && (
-          <Pressable 
-            style={styles.disconnectButton}
-            onPress={() => handleDisconnect(serviceName.toLowerCase(), setStatus)}
-          >
-            <Text style={styles.disconnectText}>Disconnect</Text>
-          </Pressable>
-        )}
+    <View style={styles.serviceContainer}>
+      <View style={[
+        styles.servicePanel,
+        status ? styles.connectedPanel : styles.disconnectedPanel
+      ]}>
+        <View style={styles.servicePanelContent}>
+          <View style={styles.serviceInfo}>
+            <Image source={logoSource} style={styles.logoContainer} />
+            <Text style={styles.serviceName}>
+              {serviceName}
+            </Text>
+            <View style={[
+              styles.statusBadge,
+              status ? styles.connected : styles.disconnected
+            ]}>
+              <Text style={styles.statusText}>
+                {status ? 'Connected' : 'Not connected'}
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.actionArea}>
+            {!status ? (
+              <Pressable
+              style={styles.loginButton}
+              onPress={() => handleLogin(serviceName.toLowerCase())}
+            >
+              <LogIn size={20} color="#fff" /> {/* Icône en blanc */}
+              <Text style={styles.loginText}>Login</Text>
+            </Pressable>
+            ) : (
+              <Pressable
+              style={styles.disconnectButton}
+              onPress={() => handleDisconnect(serviceName.toLowerCase(), setStatus)}
+            >
+              <LogOut size={20} color="#fff" /> {/* Icône en blanc */}
+              <Text style={styles.disconnectText}>Logout</Text>
+            </Pressable>
+            )}
+          </View>
+        </View>
       </View>
     </View>
   );
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <Pressable style={styles.back} onPress={() => router.push("/home")}>
+        <Pressable 
+          style={styles.backButton} 
+          onPress={() => router.push("/home")}
+        >
           <Image
             source={require('../../assets/images/left.png')}
             style={styles.backIcon}
             resizeMode="contain"
           />
+          <Text style={styles.headerTitle}>Home Page</Text>
         </Pressable>
-        <Text style={styles.titleBack}>Home Page</Text>
       </View>
-      <Text style={styles.title}>Connect to Services</Text>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#7289da" />
-      ) : (
-        <>
-          {renderServiceRow('Discord', require('../../assets/logos/discord.png'), discordStatus, setDiscordStatus)}
-          {renderServiceRow('Telegram', require('../../assets/logos/telegram.png'), telegramStatus, setTelegramStatus)}
-          {renderServiceRow('Spotify', require('../../assets/logos/spotify.png'), spotifyStatus, setSpotifyStatus)}
-        </>
-      )}
-      
+      {/* Main Content */}
+      <View style={styles.mainContent}>
+        {/* Left Section */}
+        <View style={styles.leftSection}>
+          <View style={styles.textContent}>
+            <Text style={styles.title}>Connect to Services</Text>
+            <Text style={styles.description}>
+              Link your accounts to unlock the full potential of our automation platform. 
+              Connect with Discord, Telegram, and Spotify to create powerful automated workflows 
+              and integrate your favorite services seamlessly.
+            </Text>
+          </View>
+          
+          <Image
+            source={require('../../assets/images/raton_gaming.jpg')}
+            style={styles.descriptionImage}
+            resizeMode="cover"
+          />
+        </View>
+
+        {/* Right Section - Services */}
+        <View style={styles.rightSection}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#7289da" />
+          ) : (
+            <View style={styles.servicesGrid}>
+              {renderServiceRow('Discord', require('../../assets/logos/discord.png'), discordStatus, setDiscordStatus)}
+              {renderServiceRow('Telegram', require('../../assets/logos/telegram.png'), telegramStatus, setTelegramStatus)}
+              {renderServiceRow('Spotify', require('../../assets/logos/spotify.png'), spotifyStatus, setSpotifyStatus)}
+            </View>
+          )}
+        </View>
+      </View>
+
       {showTelegramForm && (
         <TelegramForm 
           onClose={() => setShowTelegramForm(false)}
@@ -143,83 +191,132 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-    padding: 20,
   },
   header: {
+    padding: 20,
+    paddingTop: 40,
+  },
+  backButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 200,
-  },
-  buttonContainer: {
-    flex: 1,
-  },
-  disconnectButton: {
-    backgroundColor: '#ff4444',
-    padding: 7,
-    borderRadius: 5,
-    marginTop: 8,
-    alignItems: 'center',
-  },
-  disconnectText: {
-    color: 'white',
-    fontSize: 14,
-  },
-  back: {
-    marginRight: 10,
   },
   backIcon: {
     width: 24,
     height: 24,
+    marginRight: 12,
   },
-  titleBack: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#333',
+  },
+  mainContent: {
+    flex: 1,
+    flexDirection: 'row',
+    padding: 40,
+    gap: 40,
+  },
+  leftSection: {
+    flex: 1,
+    gap: 30,
+  },
+  textContent: {
+    gap: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 36,
     fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
+    color: '#333',
+    marginLeft: 50,
   },
-  serviceRow: {
+  description: {
+    fontSize: 18,
+    color: '#666',
+    lineHeight: 28,
+    marginBottom: 30,
+    marginLeft: 50,
+  },
+  descriptionImage: {
+    width: '70%',
+    height: 500,
+    borderRadius: 20,
+    marginLeft: 50,
+  },
+  rightSection: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  servicesGrid: {
+    gap: 20,
+    marginTop: 70,
+  },
+  serviceContainer: {
+    backgroundColor: '#614b40',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 16,
+  },
+  servicePanelContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
   },
-  logo: {
-    width: 40,
-    height: 40,
-  },
-  button: {
-    flex: 1,
+  serviceInfo: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#514137',
-    padding: 15,
-    marginLeft: 10,
-    borderRadius: 5,
+    alignItems: 'center',
+    gap: 16,
   },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  logoContainer: {
+    width: 48,
+    height: 48,
   },
-  status: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 10,
+  serviceName: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   connected: {
-    color: 'green',
-    backgroundColor: '#64ff54',
-    padding: 3,
-    borderRadius: 3,
+    backgroundColor: '#4CAF50',
   },
   disconnected: {
-    color: 'red',
-    backgroundColor: '#ff8989',
-    padding: 3,
-    borderRadius: 3,
+    backgroundColor: '#FF5252',
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  loginButton: {
+    backgroundColor: '#7289DA',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  loginText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  disconnectButton: {
+    backgroundColor: '#FF5252',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  disconnectText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
