@@ -29,7 +29,7 @@ class DataStruct:
 
         self.client_id_twitch = '37viu39jc58rev22poffncftrfeeee'
         self.client_secret_twitch = 'zi7liq2rd8xix8oru61pau8zgwq1ll'
-        self.streamer_name = 'Gotaga'
+        self.streamer_name = ''
         self.token_twitch = 'https://id.twitch.tv/oauth2/token'
 
         self.api_key_weather = "e45b650128bf8616ffb882282464b58a"
@@ -215,6 +215,16 @@ class DataStruct:
             print("Invalid reaction number in the list")
         return self.react_n
 
+    def get_streamer_name(self):
+
+        area_data = self.df[self.df['id'] == self.area_id]
+
+        if not area_data.empty:
+            print("deeefeff")
+            self.streamer_name = area_data['action_1_info'].iloc[0]
+        else:
+            print("Aucune donnée trouvée pour cet ID")
+
 
     def trigger_selector(self):
         if self.trigger_n == 1:
@@ -222,6 +232,8 @@ class DataStruct:
                 time.sleep(60)
             return True
         elif self.trigger_n == 2:
+            print("streamer_name")
+            self.get_streamer_name()
             while not is_streaming(self.streamer_name, self.client_id_twitch, self.client_secret_twitch, self.token_twitch):
                 time.sleep(60)
             return True
@@ -273,11 +285,11 @@ def main():
     active_areas = data.df[data.df['isActive'] == 1]
 
     for _, row in active_areas.iterrows():
-        area_id = row['id']
-        print(f"Processing area {area_id}")
-        data.parse_reaction_info(area_id)
-        data.get_react_from_bd(area_id)
-        data.get_trigger_n(area_id)
+        data.area_id = row['id']
+        print(f"Processing area {data.area_id}")
+        data.parse_reaction_info(data.area_id)
+        data.get_react_from_bd(data.area_id)
+        data.get_trigger_n(data.area_id)
         data.get_react_n()
         data.trigger_react_1()
 
