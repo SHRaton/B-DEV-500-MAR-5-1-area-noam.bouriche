@@ -1,25 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground, Platform, Pressable, Modal, ScrollView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Image, Pressable, SafeAreaView, ScrollView, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons';
+import { Home, User, Link, LogOut, ChevronDown } from 'lucide-react';
 
-const HomeScreen = () => {
-  const [modalVisible, setModalVisible] = useState(false);
+const AreaDashboard = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const arrowOpacity = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
 
   useEffect(() => {
+    // Vérifier l'authentification de l'utilisateur
     const checkAuth = async () => {
       const response = await fetch(`http://localhost:5000/check-auth`, {
         method: 'GET',
         credentials: 'include',
       });
       const data = await response.json();
+      setIsLoggedIn(data.authenticated);
 
       if (!data.authenticated) {
         router.push('/');
       }
     };
-
     checkAuth();
   }, []);
 
@@ -29,9 +36,7 @@ const HomeScreen = () => {
         method: 'POST',
         credentials: 'include',
       });
-
       if (response.ok) {
-        setModalVisible(false);
         router.push('/');
       } else {
         console.error('Erreur lors de la déconnexion');
@@ -42,70 +47,63 @@ const HomeScreen = () => {
   };
 
   const handleProfile = () => {
-    setModalVisible(false);
     router.push('/profile');
   };
 
   const handleLinkAccounts = () => {
-    setModalVisible(false);
     router.push('/link_accounts');
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.contenairDisconnect}>
-        <Pressable onPress={() => setModalVisible(true)}>
-          <ImageBackground
-            source={require('../../assets/images/profil.png')}
-            style={styles.buttonDisconnect}
-            imageStyle={{ borderRadius: 50 }}
-          />
-        </Pressable>
-      </View>
-
-      {/* Popup menu */}
-      <Modal
-        transparent={true}
-        visible={modalVisible}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
+    <SafeAreaView style={styles.pageContainer}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Pressable style={styles.modalButton} onPress={handleProfile}>
-              <Text style={styles.modalButtonText}>Profile page</Text>
-            </Pressable>
-            <Pressable style={styles.modalButton} onPress={handleLinkAccounts}>
-              <Text style={styles.modalButtonText}>Link Accounts</Text>
-            </Pressable>
-            <Pressable style={styles.modalButton} onPress={handleLogout}>
-              <Text style={styles.modalButtonText}>Disconnect</Text>
-            </Pressable>
-            <Pressable style={styles.modalCancelButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.modalButtonText}>Exit</Text>
-            </Pressable>
+        <View style={styles.contentContainer}>
+          <View style={styles.leftColumn}>
+            <View style={styles.textContainer}>
+              <Text style={styles.welcomeTitle}>Welcome to your AREA Dashboard 🧩</Text>
+              <Text style={styles.welcomeSubtitle}>Automate your daily tasks easily</Text>
+            </View>
+            <View style={styles.imageContainer}>
+              <Image
+                source={require('../../assets/images/favicon.png')}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            </View>
           </View>
-        </View>
-      </Modal>
+          
+          <View style={styles.rightColumn}>
+            <View style={styles.buttonGrid}>
+              <Pressable style={styles.buttonMyAreas} onPress={() => router.push('/my_areas')}>
+                <Home size={24} color="#fff" />
+                <Text style={styles.buttonText}>My Areas</Text>
+              </Pressable>
+              <Pressable style={styles.buttonProfile} onPress={handleProfile}>
+                <User size={24} color="#fff" />
+                <Text style={styles.buttonText}>Profile</Text>
+              </Pressable>
+              <Pressable style={styles.buttonLinkAccounts} onPress={handleLinkAccounts}>
+                <Link size={24} color="#fff" />
+                <Text style={styles.buttonText}>Link Accounts</Text>
+              </Pressable>
+              <Pressable style={styles.buttonDisconnect} onPress={handleLogout}>
+                <LogOut size={24} color="#fff" />
+                <Text style={styles.buttonText}>Disconnect</Text>
+              </Pressable>
+            </View>
+          </View>
 
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-        <View style={styles.imageContenair}>
-          <Image
-            source={require('../../assets/images/favicon.png')}
-            style={styles.image}
-            resizeMode="contain"
-          />
-        </View>
-
-        {/* Bouton "My Areas" */}
-        <View style={styles.buttonContainer}>
-          <Pressable style={styles.buttonAreas} onPress={() => router.push('/my_areas')}>
-            <Text style={styles.buttonText}>My Areas</Text>
-          </Pressable>
-        </View>
-
-        {/* Image whatis.png */}
-        <View style={styles.triggerSection}>
+          <View style={styles.triggerSection}>
+          <Animated.View style={[styles.arrowContainer, { opacity: arrowOpacity }]}>
+            <ChevronDown size={80} color="#614b40" />
+          </Animated.View>
           <Image
             source={require('../../assets/images/whatis.png')}
             style={styles.triggerImage}
@@ -113,111 +111,141 @@ const HomeScreen = () => {
           />
         </View>
 
-        {/* Image trigger.png */}
-        <View style={styles.triggerSection}>
-          <Image
-            source={require('../../assets/images/trigger.png')}
-            style={styles.triggerImage}
-            resizeMode="contain"
-          />
+          <View style={styles.triggerSection}>
+            <Image
+              source={require('../../assets/images/trigger.png')}
+              style={styles.triggerImage}
+              resizeMode="contain"
+            />
+          </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  pageContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Fond blanc
+    backgroundColor: '#f5f5f5',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
   contentContainer: {
-    alignItems: 'center',
-    paddingVertical: 20,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 80,
   },
-  imageContenair: {
-    width: 200,
-    height: 200,
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  buttonContainer: {
-    width: '50%',
-    marginBottom: 20,
-  },
-  buttonAreas: {
-    backgroundColor: '#2B211B',
-    borderRadius: 10,
-    paddingVertical: 15,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 5,
-    elevation: 3,
-    width: '100%',
-    height: 90,
-  },
-  buttonDisconnect: {
-    width: 70,
-    height: 70,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 52,
-    fontWeight: 'bold',
-  },
-  contenairDisconnect: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
-    padding: 10,
-    width: '100%',
-  },
-  modalOverlay: {
+  leftColumn: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    marginRight: 30,
   },
-  modalContent: {
-    backgroundColor: '#2B211B',
-    padding: 20,
-    borderRadius: 10,
-    width: 250,
+  rightColumn: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  modalButton: {
-    backgroundColor: '#514137',
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginVertical: 5,
+  textContainer: {
+    marginBottom: 40,
+    alignItems: 'center',
+  },
+  welcomeTitle: {
+    fontSize: 38,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    marginTop: 100,
+    textAlign: 'center',
+  },
+  welcomeSubtitle: {
+    fontSize: 28,
+    color: '#666',
+    textAlign: 'center',
+  },
+  imageContainer: {
     width: '100%',
+    maxHeight: 400,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  modalButtonText: {
-    color: '#fff',
-    fontSize: 16,
+  image: {
+    width: '100%',
+    height: 500,
+  },
+  buttonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 24,
+  },
+  buttonMyAreas: {
+    width: '35%',
+    padding: 20,
+    height: 100,
+    backgroundColor: '#614b40',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  buttonProfile: {
+    width: '55%',
+    padding: 20,
+    height: 100,
+    backgroundColor: '#514137',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  buttonLinkAccounts: {
+    width: '55%',
+    height: 100,
+    padding: 20,
+    backgroundColor: '#00b33c',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  buttonDisconnect: {
+    width: '35%',
+    padding: 20,
+    height: 100,
+    backgroundColor: '#ff3333',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 25,
     fontWeight: 'bold',
   },
-  modalCancelButton: {
-    backgroundColor: '#7b3b3b',
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginVertical: 5,
+  triggerSection: {
     width: '100%',
     alignItems: 'center',
-  },
-  triggerSection: {
-    width: '90%',
-    alignItems: 'center',
+    marginTop: 200,
   },
   triggerImage: {
     width: '150%',
     height: 900,
+    marginTop: 50
+  },
+  arrowContainer: {
+    position: 'absolute',
+    top: -50,
+    alignSelf: 'center',
+    zIndex: 1,
   },
 });
 
-export default HomeScreen;
+export default AreaDashboard;
