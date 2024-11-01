@@ -30,7 +30,7 @@ const HomeScreen = () => {
       <View style={styles.contentContainer}>
         <Text style={styles.title}>Areacoon</Text>
         <Text style={styles.subtitle}>
-          Welcome visitor !{'\n'}
+          Welcome Gamer 🎮 !{'\n'}
           Thanks to Areacoon, automate your tasks like never before !
         </Text>
         <Text style={styles.sub_subtitle}>

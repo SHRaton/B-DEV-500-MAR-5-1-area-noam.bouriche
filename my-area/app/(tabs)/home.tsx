@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground, Platform, Button, Pressable, Modal } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageBackground, Platform, Pressable, Modal, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
 
 const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    // Vérifie si l'utilisateur est authentifié
     const checkAuth = async () => {
       const response = await fetch(`http://localhost:5000/check-auth`, {
         method: 'GET',
-        credentials: 'include',  // Envoie les cookies pour la session
+        credentials: 'include',
       });
       const data = await response.json();
 
       if (!data.authenticated) {
-        router.push('/');  // Redirige vers la page de login si non authentifié
+        router.push('/');
       }
     };
 
@@ -27,12 +27,12 @@ const HomeScreen = () => {
     try {
       const response = await fetch(`http://localhost:5000/logout`, {
         method: 'POST',
-        credentials: 'include',  // Envoie les cookies pour détruire la session
+        credentials: 'include',
       });
 
       if (response.ok) {
         setModalVisible(false);
-        router.push('/');  // Redirige l'utilisateur vers la page de login après la déconnexion
+        router.push('/');
       } else {
         console.error('Erreur lors de la déconnexion');
       }
@@ -42,29 +42,28 @@ const HomeScreen = () => {
   };
 
   const handleProfile = () => {
-    setModalVisible(false); // Masquer le menu
-    router.push('/profile'); // Rediriger vers la page de profil
+    setModalVisible(false);
+    router.push('/profile');
   };
 
   const handleLinkAccounts = () => {
-    setModalVisible(false); // Masquer le menu
-    router.push('/link_accounts')
+    setModalVisible(false);
+    router.push('/link_accounts');
   };
 
   return (
-    <View>
+    <View style={styles.container}>
       <View style={styles.contenairDisconnect}>
         <Pressable onPress={() => setModalVisible(true)}>
           <ImageBackground
             source={require('../../assets/images/profil.png')}
             style={styles.buttonDisconnect}
             imageStyle={{ borderRadius: 50 }}
-          >
-          </ImageBackground>
+          />
         </Pressable>
       </View>
 
-      {/* Menu déroulant (Popup) */}
+      {/* Popup menu */}
       <Modal
         transparent={true}
         visible={modalVisible}
@@ -88,7 +87,8 @@ const HomeScreen = () => {
           </View>
         </View>
       </Modal>
-      <View style={styles.container}>
+
+      <ScrollView contentContainerStyle={styles.contentContainer}>
         <View style={styles.imageContenair}>
           <Image
             source={require('../../assets/images/favicon.png')}
@@ -96,45 +96,78 @@ const HomeScreen = () => {
             resizeMode="contain"
           />
         </View>
+
+        {/* Bouton "My Areas" */}
         <View style={styles.buttonContainer}>
           <Pressable style={styles.buttonAreas} onPress={() => router.push('/my_areas')}>
             <Text style={styles.buttonText}>My Areas</Text>
           </Pressable>
-          <View style={styles.spacing}></View>
-          <Pressable style={styles.buttonAddArea} onPress={() => router.push('/add_area')}>
-            <Text style={styles.buttonText}>Add an Area</Text>
-          </Pressable>
         </View>
-      </View>
+
+        {/* Image whatis.png */}
+        <View style={styles.triggerSection}>
+          <Image
+            source={require('../../assets/images/whatis.png')}
+            style={styles.triggerImage}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Image trigger.png */}
+        <View style={styles.triggerSection}>
+          <Image
+            source={require('../../assets/images/trigger.png')}
+            style={styles.triggerImage}
+            resizeMode="contain"
+          />
+        </View>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: 'flex-start',
-    alignItems: 'center',
+    flex: 1,
+    backgroundColor: '#FFFFFF', // Fond blanc
   },
-  title: {
-    fontSize: 60,
-    fontWeight: 'bold',
-    marginTop: 50,
-    marginBottom: 20,
+  contentContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
   },
   imageContenair: {
-    width: 350,
-    height: 350,
+    width: 200,
+    height: 200,
   },
   image: {
     width: '100%',
     height: '100%',
-    marginBottom: 20,
   },
   buttonContainer: {
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    width: '60%',
-    height: 100,
+    width: '50%',
+    marginBottom: 20,
+  },
+  buttonAreas: {
+    backgroundColor: '#2B211B',
+    borderRadius: 10,
+    paddingVertical: 15,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 5,
+    elevation: 3,
+    width: '100%',
+    height: 90,
+  },
+  buttonDisconnect: {
+    width: 70,
+    height: 70,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 52,
+    fontWeight: 'bold',
   },
   contenairDisconnect: {
     display: 'flex',
@@ -143,57 +176,24 @@ const styles = StyleSheet.create({
     padding: 10,
     width: '100%',
   },
-  buttonAreas: {
-    backgroundColor: '#2B211B', // Couleur de fond du bouton
-    borderRadius: 20, // Arrondi des bords
-    paddingVertical: 10, // Espacement vertical
-    paddingHorizontal: 20, // Espacement horizontal
-    alignItems: 'center', // Centrer le texte
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-  },
-  buttonAddArea: {
-    backgroundColor: '#514137', // Couleur de fond du bouton 2B211B 514137
-    borderRadius: 20, // Arrondi des bords
-    paddingVertical: 10, // Espacement vertical
-    paddingHorizontal: 20, // Espacement horizontal
-    alignItems: 'center', // Centrer le texte
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-  },
-  buttonDisconnect: {
-    width: 70,
-    height: 70,
-  },
-  buttonText: {
-    color: '#FFFFFF', // Couleur du texte
-    fontSize: 20, // Taille de la police
-    fontWeight: 'bold', // Poids de la police
-  },
-  spacing: {
-    height: 40,
-  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fond semi-transparent
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: '#2B211B',
     padding: 20,
     borderRadius: 10,
     width: 250,
     alignItems: 'center',
   },
   modalButton: {
-    backgroundColor: '#2B211B',
+    backgroundColor: '#514137',
     paddingVertical: 10,
-    paddingHorizontal: 20,
     borderRadius: 10,
-    marginVertical: 10,
+    marginVertical: 5,
     width: '100%',
     alignItems: 'center',
   },
@@ -203,13 +203,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   modalCancelButton: {
-    backgroundColor: '#514137',
+    backgroundColor: '#7b3b3b',
     paddingVertical: 10,
-    paddingHorizontal: 20,
     borderRadius: 10,
-    marginVertical: 10,
+    marginVertical: 5,
     width: '100%',
     alignItems: 'center',
+  },
+  triggerSection: {
+    width: '90%',
+    alignItems: 'center',
+  },
+  triggerImage: {
+    width: '150%',
+    height: 900,
   },
 });
 
