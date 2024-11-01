@@ -143,21 +143,31 @@ def spotify_login():
         show_dialog='true',  # Force l'affichage même si déjà connecté
         prompt='consent'  # Force la demande de consentement
     )
+
 @app.route('/auth/spotify/callback')
 def spotify_authorize():
     try:
+        # Journalisation de la réponse d'autorisation
         token = spotify.authorize_access_token()
+        print('Token reçu:', token)
+
+        # Récupérer les informations de l'utilisateur
         resp = spotify.get('me', token=token)
+        print('Réponse de /me:', resp)
+
+        if resp.status_code != 200:
+            print(f"Erreur dans la réponse de Spotify /me : {resp.text}")
+            raise Exception("Erreur dans la récupération des informations de l'utilisateur.")
+
         user_info = resp.json()
-        
+
+        # Code pour stocker le token dans la base de données
         user = session.get('user')
         user_id = user['id']
         if user_id:
             conn = get_db_connection()
-            
-            # Stockage du token d'accès et du refresh token si disponible
             conn.execute('UPDATE users SET spotify_id = ? WHERE id = ?', 
-                        (token['access_token'], user_id))
+                         (token['access_token'], user_id))
             conn.commit()
             conn.close()
             print('Token Spotify :', token)
@@ -166,10 +176,11 @@ def spotify_authorize():
         else:
             print('Error: No user_id found in session')
         return redirect('http://localhost:8081/link_accounts')
-        
+
     except Exception as e:
         print(f"Error during Spotify authorization: {str(e)}")
         return redirect('http://localhost:8081/link_accounts')
+
 
 def get_db_connection():
     db_path = os.path.join(os.path.dirname(__file__), 'database', 'database.db')
@@ -362,7 +373,7 @@ def get_user_info():
     user_id = user['id']
 
     conn = get_db_connection()
-    user_data = conn.execute('SELECT id, username, email, discord_id, spotify_id, twitch_id, bio FROM users WHERE id = ?', (user_id,)).fetchone()
+    user_data = conn.execute('SELECT id, username, email, discord_id, spotify_id, twitch_id, bio, photo_id FROM users WHERE id = ?', (user_id,)).fetchone()
     conn.close()
 
     if user_data:
@@ -412,6 +423,44 @@ def handle_add_area():
         return jsonify({"message": "Area added successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+@app.route('/update-photo', methods=['PUT'])
+def update_user_photo():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    user = session.get('user')
+    user_id = user['id']
+
+    data = request.get_json()
+    print(data)
+    new_photo_id = data.get('photo_id')
+
+    conn = get_db_connection()
+
+    update_fields = []
+    params = []
+
+    if new_photo_id is not None:  # Check if new_photo_id is provided
+        update_fields.append('photo_id = ?')
+        params.append(new_photo_id)
+
+    if not update_fields:
+        return jsonify({"error": "No valid data provided to update"}), 400
+
+    params.append(user_id)
+
+    query = f'UPDATE users SET {", ".join(update_fields)} WHERE id = ?'
+    
+    # Execute the query and commit the transaction
+    conn.execute(query, params)
+    conn.commit()
+    
+    conn.close()
+
+    # Return a success response after the update
+    return jsonify({"message": "Photo updated successfully"}), 200
+
 
 @app.route('/update-user-info', methods=['PUT'])
 def update_user_info():

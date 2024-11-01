@@ -1,16 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable, TextInput, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
+import PhotoSelection from './photo_selection';
 
 const ProfileScreen = () => {
   const router = useRouter();
 
   // State to store user information
   const [user, setUser] = useState(null);
+  const [showPhotoSelection, setShowPhotoSelection] = useState(false);
   const [editedUser, setEditedUser] = useState(null);  // State pour les données éditées
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);  // Mode édition
   const [modalVisible, setModalVisible] = useState(false);
+
+  const photos = {
+    1: require('../../assets/images/photo_1.png'),
+    2: require('../../assets/images/photo_2.png'),
+    3: require('../../assets/images/photo_3.png'),
+    4: require('../../assets/images/photo_4.png'),
+    5: require('../../assets/images/photo_5.png'),
+    6: require('../../assets/images/photo_6.png'),
+    7: require('../../assets/images/photo_7.png'),
+    8: require('../../assets/images/photo_8.png'),
+    9: require('../../assets/images/photo_9.png'),
+    10: require('../../assets/images/photo_10.png'),
+  };
 
   // Function to fetch user information
   const fetchUserInfo = async () => {
@@ -22,6 +37,7 @@ const ProfileScreen = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log(data);
         setUser(data);  // Store user info in state
         setEditedUser(data);  // Initialize edited user info with current user info
       } else {
@@ -98,6 +114,28 @@ const ProfileScreen = () => {
     }
   };  
 
+  const handleSelectPhoto = async (photo) => {
+    console.log(photo);
+    try {
+      const response = await fetch('http://localhost:5000/update-photo', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ photo_id: photo }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      setEditedUser({ ...editedUser, photo_id: photo });
+      setShowPhotoSelection(false);
+      console.log('Photo de profil mise à jour avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la photo de profil:', error);
+    }
+  };
+
   // If user info is not yet loaded
   if (!user) {
     return (
@@ -122,7 +160,13 @@ const ProfileScreen = () => {
 
       <View style={styles.profileContainer}>
         {/* Display profile picture */}
-        <Image source={require('../../assets/images/profil.png')} style={styles.profileImage} resizeMode="contain" />
+        <Pressable onPress={() => setShowPhotoSelection(true)}>
+          <Image 
+            source={photos[editedUser.photo_id]} // Image de profil actuelle
+            style={styles.profileImage} 
+            resizeMode="cover" 
+          />
+        </Pressable>
 
         {/* Mode édition */}
         {isEditing ? (
@@ -200,6 +244,24 @@ const ProfileScreen = () => {
           This page also offers the possibility of modifying this information to keep your profile up to date.
         </Text>
       </View>
+
+      {/* Modal for Photo Selection */}
+      <Modal
+        transparent={true}
+        animationType="slide"
+        visible={showPhotoSelection}
+        onRequestClose={() => setShowPhotoSelection(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <PhotoSelection 
+              onSelect={handleSelectPhoto} 
+              onClose={() => setShowPhotoSelection(false)} 
+            />
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 };
@@ -327,6 +389,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#f02424',
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
   },
 });
 

@@ -19,7 +19,8 @@ def init_db():
             telegram_id TEXT,
             spotify_id TEXT,
             twitch_id TEXT,
-            bio TEXT
+            bio TEXT,
+            photo_id INTEGER DEFAULT 1
         )
     ''')
 
