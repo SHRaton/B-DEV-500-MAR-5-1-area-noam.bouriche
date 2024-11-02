@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, session, redirect, url_for, send_from_directory
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired
+from werkzeug.security import generate_password_hash
 from authlib.integrations.flask_client import OAuth
 from werkzeug.security import check_password_hash
 from email.mime.multipart import MIMEMultipart
@@ -9,11 +10,16 @@ from database.add_area import add_area
 from scheduler import start_scheduler
 from email.mime.text import MIMEText
 from flask_cors import CORS
+import requests
 import sqlite3
 import smtplib
+import hashlib
+import random
+import string
 import time
 import os
-import requests
+
+
 
 app = Flask(__name__)
 app.secret_key = 'ratonisthegoat'
@@ -70,22 +76,41 @@ spotify = oauth.register(
     }
 )
 
-def generate_confirmation_token(email):
-    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-    return serializer.dumps(email, salt=app.config['SECURITY_PASSWORD_SALT'])
+def generate_temp_password(length=8):
+    """Génère un mot de passe temporaire aléatoire simple"""
+    characters = string.ascii_letters + string.digits
+    temp_password = ''.join(random.choice(characters) for i in range(length))
+    return temp_password
 
 def send_reset_email(user_email):
-    token = generate_confirmation_token(user_email)
-    reset_url = f'http://localhost:8081/reset-password/{token}'  # Ajustez l'URL selon votre frontend
+    # Générer un mot de passe temporaire
+    temp_password = generate_temp_password()
+    
+    # Stocker le mot de passe en clair dans la base de données
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE users SET password = ? WHERE email = ?',
+        (temp_password, user_email)
+    )
+    conn.execute(
+        'UPDATE users SET change_password = ? WHERE email = ?',
+        (1, user_email)
+    )
+    conn.commit()
+    conn.close()
 
+    # Préparer et envoyer l'email
     message = MIMEMultipart()
     message['From'] = app.config['MAIL_USERNAME']
     message['To'] = user_email
-    message['Subject'] = "Réinitialisation de votre mot de passe"
+    message['Subject'] = "Votre nouveau mot de passe"
     
-    body = f'Pour réinitialiser votre mot de passe, cliquez sur le lien suivant : {reset_url}'
+    body = f"""Voici votre nouveau mot de passe : {temp_password}
+    
+Vous pouvez utiliser ce mot de passe pour vous connecter à votre compte."""
+    
     message.attach(MIMEText(body, 'plain'))
-
+    
     try:
         server = smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
         server.starttls()
@@ -100,13 +125,13 @@ def send_reset_email(user_email):
 
 @app.route('/forgot-password', methods=['POST'])
 def forgot_password():
-    data = request.get_json()  # Au lieu de request.form
-    email = data.get('email')  # Utiliser .get() pour éviter l'erreur KeyError
+    data = request.get_json()
+    email = data.get('email')
     
     if not email:
         return jsonify({'error': 'Email is required'}), 400
-        
-    # Vérifiez si l'email existe dans la base de données
+    
+    # Vérifier si l'email existe dans la base de données
     conn = get_db_connection()
     user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
     conn.close()
@@ -116,24 +141,62 @@ def forgot_password():
     
     try:
         send_reset_email(email)
-        return jsonify({'message': 'Reset email sent successfully'}), 200
+        return jsonify({'message': 'Nouveau mot de passe envoyé par email'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Route pour traiter la réinitialisation du mot de passe
-@app.route('/reset-password/<token>', methods=['GET', 'POST'])
-def reset_password(token):
+@app.route('/change-password', methods=['POST'])
+def handle_change_password():
     try:
-        serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-        email = serializer.loads(token, salt=app.config['SECURITY_PASSWORD_SALT'], max_age=3600)
-        # Si le token est valide, permettre à l'utilisateur de changer son mot de passe
-        if request.method == 'POST':
-            new_password = request.form['new_password']
-            # Logique pour changer le mot de passe dans la base de données
-            return 'Mot de passe changé avec succès.'
-        return render_template('reset_password.html')  # Formulaire pour entrer le nouveau mot de passe
+        # Vérifier si l'utilisateur est connecté
+        if 'user' not in session:
+            return jsonify({"error": "Non autorisé. Veuillez vous connecter."}), 401
+
+        data = request.get_json()
+        new_password = data.get('newPassword')
+
+        if not new_password:
+            return jsonify({"error": "Tous les champs sont requis"}), 400
+
+        conn = get_db_connection()
+
+        # Récupérer l'utilisateur actuel
+        user = conn.execute(
+            'SELECT * FROM users WHERE id = ?',
+            (session['user']['id'],)
+        ).fetchone()
+
+        if not user:
+            conn.close()
+            return jsonify({"error": "Utilisateur non trouvé"}), 404
+
+        # Mettre à jour le mot de passe et change_password
+        conn.execute(
+            '''UPDATE users 
+               SET password = ?,
+                   change_password = FALSE
+               WHERE id = ?''',
+            (new_password, session['user']['id'])
+        )
+
+        conn.commit()
+        conn.close()
+
+        # Mettre à jour la session
+        user_data = session['user']
+        user_data['change_password'] = False
+        session['user'] = user_data
+
+        return jsonify({
+            "message": "Mot de passe modifié avec succès",
+            "success": True
+        }), 200
+
     except Exception as e:
-        return f"Le lien de réinitialisation est invalide ou a expiré : {e}"
+        print(f"Erreur lors du changement de mot de passe: {str(e)}")
+        return jsonify({
+            "error": "Une erreur est survenue lors du changement de mot de passe"
+        }), 500
 
 @app.route('/login/spotify')
 def spotify_login():
@@ -511,26 +574,53 @@ def update_user_info():
 
 @app.route('/login', methods=['POST'])
 def handle_login():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
-
-    conn = get_db_connection()
-
-    user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
-    conn.close()
-
-    if user is None:
-        return jsonify({"authenticated": False, "error": "Utilisateur non trouvé"}), 404
-
-    if user['password'] != password:
-        return jsonify({"authenticated": False, "error": "Mot de passe incorrect"}), 401
-
-    user_data = {"id": user['id'], "email": user['email']}
-    session['user'] = user_data
-
-    return jsonify({"authenticated": True, "message": "Connexion reussie", "user": user_data}), 200
-
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            return jsonify({"error": "Email et mot de passe requis"}), 400
+        
+        conn = get_db_connection()
+        
+        user = conn.execute(
+            'SELECT * FROM users WHERE email = ?',
+            (email,)
+        ).fetchone()
+        
+        conn.close()
+        
+        if user is None:
+            return jsonify({"authenticated": False, "error": "Utilisateur non trouvé"}), 404
+        
+        if user['password'] != password:
+            return jsonify({"authenticated": False, "error": "Mot de passe incorrect"}), 401
+        
+        user_data = {
+            "id": user['id'],
+            "email": user['email'],
+            "change_password": bool(user['change_password'])  # Conversion explicite en booléen
+        }
+        session['user'] = user_data
+        
+        # Vérifier si l'utilisateur doit changer son mot de passe
+        if user['change_password']:
+            return jsonify({
+                "authenticated": True,
+                "requirePasswordChange": True,
+                "message": "Changement de mot de passe requis"
+            }), 200
+        
+        return jsonify({
+            "authenticated": True,
+            "message": "Connexion réussie",
+            "user": user_data
+        }), 200
+        
+    except Exception as e:
+        print(f"Erreur lors de la connexion: {str(e)}")
+        return jsonify({"error": "Une erreur est survenue lors de la connexion"}), 500
 
 @app.route('/login/google')
 def google_login():

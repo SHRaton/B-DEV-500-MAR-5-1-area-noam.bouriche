@@ -1,56 +1,42 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, Image, Platform, Linking, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, Image, Platform, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 
-const LoginScreen = () => {
+const ForgotPasswordScreen = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [message, setMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
   const router = useRouter();
   const { width } = useWindowDimensions();
 
   const isMobile = width <= 768;
 
-  // Dans la fonction handleLogin du composant LoginScreen
-  const handleLogin = async () => {
+  const handleSubmit = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/login`, {
+      const response = await fetch(`http://localhost:5000/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
           email: email,
-          password: password,
         }),
       });
 
       const data = await response.json();
-      console.log('Réponse du serveur:', data);
 
-      if (data.authenticated) {
-        if (data.requirePasswordChange) {
-          router.push('/change-password');
-        } else {
-          router.push('/home');
-        }
+      if (response.ok) {
+        setIsSuccess(true);
+        setMessage('Un email de réinitialisation a été envoyé à votre adresse email.');
       } else {
-        setErrorMessage(data.error || 'Erreur lors de la connexion.');
+        setIsSuccess(false);
+        setMessage(data.error || 'Une erreur est survenue.');
       }
     } catch (error) {
-      console.error('Erreur lors de la connexion:', error);
-      setErrorMessage('Erreur de connexion au serveur');
-    }
-  };
-
-  const handleGoogleLogin = () => {
-    const googleLoginURL = `http://localhost:5000/login/google`;
-    if (Platform.OS === 'web') {
-      window.location.href = googleLoginURL; // For web platforms
-    } else {
-      Linking.openURL(googleLoginURL); // For Android and iOS platforms
+      console.error('Erreur:', error);
+      setIsSuccess(false);
+      setMessage('Une erreur est survenue lors de la connexion au serveur.');
     }
   };
 
@@ -71,23 +57,23 @@ const LoginScreen = () => {
       )}
       {!isMobile && (
         <View style={styles.leftTextContainer}>
-          <Text style={styles.text1}>Turn your ideas into reality.</Text>
-          <Text style={styles.text2}>Create your own automatism with Actions and Reactions</Text>
+            <Text style={styles.text1}>Turn your ideas into reality.</Text>
+            <Text style={styles.text2}>Create your own automatism with Actions and Reactions</Text>
         </View>
       )}
+      
       <View style={[styles.container, isMobile && styles.containerMobile]}>
         <Text style={styles.maintitle}>AREA</Text>
-        <Text style={styles.tagline}>Raccoon is here for you !</Text>
-        <Text style={styles.subTagline}>Create your own automatisms with Actions and Reactions</Text>
+        <Text style={styles.title}>Forgotten password ?</Text>
+        <Text style={styles.subtitle}>
+          Enter your email address et we are gonna send you a reset password link.
+        </Text>
 
-        <Pressable style={styles.googleButton} onPress={handleGoogleLogin}>
-          <Image source={require('../../assets/logos/google.png')} style={styles.googleIcon} />
-          <Text style={styles.googleButtonText}>Continue with Google</Text>
-        </Pressable>
-
-        <Text style={styles.orText}>or Sign in with Email</Text>
-
-        {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+        {message ? (
+          <Text style={[styles.message, isSuccess ? styles.successMessage : styles.errorMessage]}>
+            {message}
+          </Text>
+        ) : null}
 
         <TextInput
           style={styles.input}
@@ -95,31 +81,21 @@ const LoginScreen = () => {
           placeholderTextColor="#d3d3d3"
           value={email}
           onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#d3d3d3"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
 
         <Pressable
-          style={[styles.loginButton, isHovered && styles.loginButtonHover]}
-          onPress={handleLogin}
+          style={[styles.submitButton, isHovered && styles.submitButtonHover]}
+          onPress={handleSubmit}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <Text style={styles.loginButtonText}>Login</Text>
+          <Text style={styles.submitButtonText}>Send link</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push('/forgot-password')}>
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </Pressable>
-
-        <Pressable onPress={() => router.push('/register')}>
-          <Text style={styles.registerRedirectText}>Not registered yet? Register here</Text>
+        <Pressable onPress={() => router.push('/login')}>
+          <Text style={styles.backToLoginText}>Return to login page</Text>
         </Pressable>
       </View>
     </View>
@@ -190,47 +166,20 @@ const styles = StyleSheet.create({
   },
   maintitle: {
     fontSize: 80,
-  },
-  raccoonImage: {
-    width: 150,
-    height: 150,
     marginBottom: 20,
   },
-  tagline: {
+  title: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 10,
     textAlign: 'center',
-    marginBottom: 5,
   },
-  subTagline: {
+  subtitle: {
     fontSize: 16,
-    color: '#555',
+    color: '#666',
     textAlign: 'center',
-    marginBottom: 20,
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  googleIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 10,
-  },
-  googleButtonText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  orText: {
-    marginVertical: 10,
-    color: '#888',
+    marginBottom: 30,
+    maxWidth: '80%',
   },
   input: {
     borderWidth: 1,
@@ -241,13 +190,13 @@ const styles = StyleSheet.create({
     width: '80%',
     backgroundColor: '#f0f0f0',
   },
-  loginButton: {
+  submitButton: {
     backgroundColor: '#6200EE',
     padding: 15,
     borderRadius: 5,
     width: '80%',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
     transition: 'transform 0.8s ease-in-out, box-shadow 0.8s ease-in-out',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -255,29 +204,33 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  loginButtonHover: {
+  submitButtonHover: {
     transform: 'scale(1.001)',
     boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)',
   },
-  loginButtonText: {
+  submitButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  forgotPasswordText: {
-    color: '#6200EE',
-    marginTop: 10,
+  message: {
     marginBottom: 20,
-    fontSize: 14,
+    padding: 10,
+    borderRadius: 5,
+    textAlign: 'center',
+    width: '80%',
   },
-  registerRedirectText: {
+  successMessage: {
+    backgroundColor: '#e6ffe6',
+    color: '#006600',
+  },
+  errorMessage: {
+    backgroundColor: '#ffe6e6',
+    color: '#cc0000',
+  },
+  backToLoginText: {
     color: '#6200EE',
-    marginTop: 20,
     fontSize: 14,
-  },
-  error: {
-    color: 'red',
-    marginBottom: 20,
   },
 });
 
@@ -303,4 +256,4 @@ if (Platform.OS === 'web') {
   Object.assign(styles, StyleSheet.flatten(styleSheet));
 }
 
-export default LoginScreen;
+export default ForgotPasswordScreen;

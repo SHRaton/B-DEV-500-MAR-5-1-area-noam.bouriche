@@ -1,56 +1,52 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, Image, Platform, Linking, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, Image, Platform, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 
-const LoginScreen = () => {
+const ChangePasswordScreen = () => {
   const [isHovered, setIsHovered] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
   const { width } = useWindowDimensions();
 
   const isMobile = width <= 768;
 
-  // Dans la fonction handleLogin du composant LoginScreen
-  const handleLogin = async () => {
+  const handleChangePassword = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/login`, {
+      // Validation basique
+      if (newPassword !== confirmPassword) {
+        setErrorMessage('Les mots de passe ne correspondent pas');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
         body: JSON.stringify({
-          email: email,
-          password: password,
+          newPassword,
         }),
       });
 
       const data = await response.json();
-      console.log('Réponse du serveur:', data);
 
-      if (data.authenticated) {
-        if (data.requirePasswordChange) {
-          router.push('/change-password');
-        } else {
+      if (response.ok) {
+        setSuccessMessage('Mot de passe modifié avec succès');
+        setErrorMessage('');
+        // Redirection après 2 secondes
+        setTimeout(() => {
           router.push('/home');
-        }
+        }, 2000);
       } else {
-        setErrorMessage(data.error || 'Erreur lors de la connexion.');
+        setErrorMessage(data.error || 'Erreur lors du changement de mot de passe');
       }
     } catch (error) {
-      console.error('Erreur lors de la connexion:', error);
+      console.error('Erreur:', error);
       setErrorMessage('Erreur de connexion au serveur');
-    }
-  };
-
-  const handleGoogleLogin = () => {
-    const googleLoginURL = `http://localhost:5000/login/google`;
-    if (Platform.OS === 'web') {
-      window.location.href = googleLoginURL; // For web platforms
-    } else {
-      Linking.openURL(googleLoginURL); // For Android and iOS platforms
     }
   };
 
@@ -71,55 +67,47 @@ const LoginScreen = () => {
       )}
       {!isMobile && (
         <View style={styles.leftTextContainer}>
-          <Text style={styles.text1}>Turn your ideas into reality.</Text>
-          <Text style={styles.text2}>Create your own automatism with Actions and Reactions</Text>
+          <Text style={styles.text1}>Sécurisez votre compte</Text>
+          <Text style={styles.text2}>Changez votre mot de passe pour plus de sécurité</Text>
         </View>
       )}
+
       <View style={[styles.container, isMobile && styles.containerMobile]}>
         <Text style={styles.maintitle}>AREA</Text>
-        <Text style={styles.tagline}>Raccoon is here for you !</Text>
-        <Text style={styles.subTagline}>Create your own automatisms with Actions and Reactions</Text>
-
-        <Pressable style={styles.googleButton} onPress={handleGoogleLogin}>
-          <Image source={require('../../assets/logos/google.png')} style={styles.googleIcon} />
-          <Text style={styles.googleButtonText}>Continue with Google</Text>
-        </Pressable>
-
-        <Text style={styles.orText}>or Sign in with Email</Text>
+        <Text style={styles.tagline}>Changement de mot de passe</Text>
+        <Text style={styles.subTagline}>Veuillez choisir un nouveau mot de passe sécurisé</Text>
 
         {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+        {successMessage ? <Text style={styles.success}>{successMessage}</Text> : null}
 
         <TextInput
           style={styles.input}
-          placeholder="Email"
+          placeholder="Nouveau mot de passe"
           placeholderTextColor="#d3d3d3"
-          value={email}
-          onChangeText={setEmail}
+          value={newPassword}
+          onChangeText={setNewPassword}
+          secureTextEntry
         />
         <TextInput
           style={styles.input}
-          placeholder="Password"
+          placeholder="Confirmer le nouveau mot de passe"
           placeholderTextColor="#d3d3d3"
-          value={password}
-          onChangeText={setPassword}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
           secureTextEntry
         />
 
         <Pressable
-          style={[styles.loginButton, isHovered && styles.loginButtonHover]}
-          onPress={handleLogin}
+          style={[styles.changeButton, isHovered && styles.changeButtonHover]}
+          onPress={handleChangePassword}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <Text style={styles.loginButtonText}>Login</Text>
+          <Text style={styles.changeButtonText}>Changer le mot de passe</Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push('/forgot-password')}>
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </Pressable>
-
-        <Pressable onPress={() => router.push('/register')}>
-          <Text style={styles.registerRedirectText}>Not registered yet? Register here</Text>
+        <Pressable onPress={() => router.push('/home')}>
+          <Text style={styles.cancelText}>Annuler</Text>
         </Pressable>
       </View>
     </View>
@@ -191,11 +179,6 @@ const styles = StyleSheet.create({
   maintitle: {
     fontSize: 80,
   },
-  raccoonImage: {
-    width: 150,
-    height: 150,
-    marginBottom: 20,
-  },
   tagline: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -208,30 +191,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  googleIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 10,
-  },
-  googleButtonText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  orText: {
-    marginVertical: 10,
-    color: '#888',
-  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -241,7 +200,7 @@ const styles = StyleSheet.create({
     width: '80%',
     backgroundColor: '#f0f0f0',
   },
-  loginButton: {
+  changeButton: {
     backgroundColor: '#6200EE',
     padding: 15,
     borderRadius: 5,
@@ -255,30 +214,28 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  loginButtonHover: {
+  changeButtonHover: {
     transform: 'scale(1.001)',
     boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.3)',
   },
-  loginButtonText: {
+  changeButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  forgotPasswordText: {
+  cancelText: {
     color: '#6200EE',
     marginTop: 10,
-    marginBottom: 20,
-    fontSize: 14,
-  },
-  registerRedirectText: {
-    color: '#6200EE',
-    marginTop: 20,
     fontSize: 14,
   },
   error: {
     color: 'red',
     marginBottom: 20,
   },
+  success: {
+    color: 'green',
+    marginBottom: 20,
+  }
 });
 
 if (Platform.OS === 'web') {
@@ -303,4 +260,4 @@ if (Platform.OS === 'web') {
   Object.assign(styles, StyleSheet.flatten(styleSheet));
 }
 
-export default LoginScreen;
+export default ChangePasswordScreen;

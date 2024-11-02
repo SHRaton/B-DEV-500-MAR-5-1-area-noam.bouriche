@@ -90,6 +90,10 @@ const ProfileScreen = () => {
     setIsEditing(true);
   };
 
+  const handleChangePassword = () => {
+    router.push('/change-password');
+  }
+
   // Function to save edited profile
   const handleSave = async () => {
     try {
@@ -223,6 +227,10 @@ const ProfileScreen = () => {
             <Pressable style={styles.editButton} onPress={handleEdit}>
               <Text style={styles.editButtonText}>Edit Profile</Text>
             </Pressable>
+
+            <Pressable style={styles.changeButton} onPress={handleChangePassword}>
+              <Text style={styles.editButtonText}>Change password </Text>
+            </Pressable>
           </View>
         )}
       </View>
@@ -333,6 +341,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 15,
     paddingHorizontal: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  changeButton: {
+    backgroundColor: '#514137',
+    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    marginTop: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },

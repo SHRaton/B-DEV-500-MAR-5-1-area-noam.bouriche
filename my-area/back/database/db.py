@@ -15,6 +15,7 @@ def init_db():
             username TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
+            change_password BOOLEAN DEFAULT False,
             discord_id TEXT,
             telegram_id TEXT,
             spotify_id TEXT,
