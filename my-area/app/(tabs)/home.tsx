@@ -16,7 +16,7 @@ const AreaDashboard = () => {
   useEffect(() => {
     // Vérifier l'authentification de l'utilisateur
     const checkAuth = async () => {
-      const response = await fetch(`http://localhost:5000/check-auth`, {
+      const response = await fetch(`http://localhost:8080/check-auth`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -32,7 +32,7 @@ const AreaDashboard = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/logout`, {
+      const response = await fetch(`http://localhost:8080/logout`, {
         method: 'POST',
         credentials: 'include',
       });

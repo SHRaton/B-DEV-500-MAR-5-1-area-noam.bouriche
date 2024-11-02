@@ -9,7 +9,7 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const response = await fetch('http://localhost:5000/check-auth', {
+      const response = await fetch('http://localhost:8080/check-auth', {
         method: 'GET',
         credentials: 'include',
       });

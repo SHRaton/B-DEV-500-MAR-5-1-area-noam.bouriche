@@ -53,5 +53,5 @@ docker compose up --build
 ```
 
 This will:
-- Start the backend server on port 5000
+- Start the backend server on port 8080
 - Start the frontend application on port 8081

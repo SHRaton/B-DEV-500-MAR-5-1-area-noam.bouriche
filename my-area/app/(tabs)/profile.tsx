@@ -30,7 +30,7 @@ const ProfileScreen = () => {
   // Function to fetch user information
   const fetchUserInfo = async () => {
     try {
-      const response = await fetch('http://localhost:5000/get-user-info', {
+      const response = await fetch('http://localhost:8080/get-user-info', {
         method: 'GET',
         credentials: 'include', // Include cookies with the session
       });
@@ -52,7 +52,7 @@ const ProfileScreen = () => {
   useEffect(() => {
     // Vérifie si l'utilisateur est authentifié
     const checkAuth = async () => {
-      const response = await fetch(`http://localhost:5000/check-auth`, {
+      const response = await fetch(`http://localhost:8080/check-auth`, {
         method: 'GET',
         credentials: 'include',  // Envoie les cookies pour la session
       });
@@ -70,7 +70,7 @@ const ProfileScreen = () => {
   // Function to handle logout
   const handleLogout = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/logout`, {
+      const response = await fetch(`http://localhost:8080/logout`, {
         method: 'POST',
         credentials: 'include',  // Send cookies to destroy session
       });
@@ -97,7 +97,7 @@ const ProfileScreen = () => {
   // Function to save edited profile
   const handleSave = async () => {
     try {
-      const response = await fetch('http://localhost:5000/update-user-info', {
+      const response = await fetch('http://localhost:8080/update-user-info', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ const ProfileScreen = () => {
   const handleSelectPhoto = async (photo) => {
     console.log(photo);
     try {
-      const response = await fetch('http://localhost:5000/update-photo', {
+      const response = await fetch('http://localhost:8080/update-photo', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

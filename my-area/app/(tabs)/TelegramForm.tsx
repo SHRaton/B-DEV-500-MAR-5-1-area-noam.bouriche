@@ -13,7 +13,7 @@ const TelegramForm = ({ onClose, onSuccess }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/connect-telegram', {
+      const response = await fetch('http://localhost:8080/connect-telegram', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

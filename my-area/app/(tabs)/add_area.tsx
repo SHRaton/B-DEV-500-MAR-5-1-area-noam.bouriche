@@ -90,7 +90,7 @@ const AddArea = () => {
   useEffect(() => {
     // Vérifie si l'utilisateur est authentifié
     const checkAuth = async () => {
-      const response = await fetch(`http://localhost:5000/check-auth`, {
+      const response = await fetch(`http://localhost:8080/check-auth`, {
         method: 'GET',
         credentials: 'include',  // Envoie les cookies pour la session
       });
@@ -215,7 +215,7 @@ const AddArea = () => {
       }, {})
     };
     try {
-      const response = await fetch('http://localhost:5000/add-area', {
+      const response = await fetch('http://localhost:8080/add-area', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

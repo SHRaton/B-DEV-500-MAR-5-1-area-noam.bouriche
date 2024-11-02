@@ -14,7 +14,7 @@ const ForgotPasswordScreen = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/forgot-password`, {
+      const response = await fetch(`http://localhost:8080/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -26,7 +26,7 @@ const MyAreas: React.FC = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const response = await fetch(`http://localhost:5000/check-auth`, {
+      const response = await fetch(`http://localhost:8080/check-auth`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -43,7 +43,7 @@ const MyAreas: React.FC = () => {
   useEffect(() => {
     const fetchAreas = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/get-areas`, {
+        const response = await fetch(`http://localhost:8080/get-areas`, {
           method: 'GET',
           credentials: 'include',
         });
@@ -59,7 +59,7 @@ const MyAreas: React.FC = () => {
 
   const toggleAreaStatus = async (areaId: number, newStatus: boolean) => {
     try {
-      const response = await fetch(`http://localhost:5000/update-area-status`, {
+      const response = await fetch(`http://localhost:8080/update-area-status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -86,7 +86,7 @@ const MyAreas: React.FC = () => {
     if (!areaToDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/delete-area`, {
+      const response = await fetch(`http://localhost:8080/delete-area`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

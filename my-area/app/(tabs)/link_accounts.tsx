@@ -32,7 +32,7 @@ export default function AuthPage() {
 
   const checkConnectionStatus = async (service, setStatus) => {
     try {
-      const response = await fetch(`http://localhost:5000/is-connected-${service}`, {
+      const response = await fetch(`http://localhost:8080/is-connected-${service}`, {
         credentials: 'include',
       });
       if (!response.ok) {
@@ -49,7 +49,7 @@ export default function AuthPage() {
   const handleDisconnect = async (service, setStatus) => {
     console.log("okokokok")
     try {
-      const response = await fetch(`http://localhost:5000/disconnect-${service}`, {
+      const response = await fetch(`http://localhost:8080/disconnect-${service}`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -68,7 +68,7 @@ export default function AuthPage() {
     if (service === 'telegram') {
       setShowTelegramForm(true);
     } else {
-      const loginURL = `http://localhost:5000/login/${service}`;
+      const loginURL = `http://localhost:8080/login/${service}`;
       if (Platform.OS === 'web') {
         window.location.href = loginURL;
       } else {
