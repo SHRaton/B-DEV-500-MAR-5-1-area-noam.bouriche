@@ -1,3 +1,4 @@
+from threading import Thread
 import requests
 import time
 import socket
@@ -13,13 +14,17 @@ from weather_api import get_weather
 from db_connect import get_active_actions, get_data_from_db
 import json
 
-class DataStruct:
+
+class DataStructThread(Thread):
+
     def __init__(self):
+        super().__init__()
         self.trigger_n = 0
         self.react_n = []
+        self.running = True
 
-        self.text = "i love poop"
-        self.lang = "FR"
+        self.text = ""
+        self.lang = ""
 
         self.discord_mess = "reaction discord"
         self.user_to_detect = 694509368904777748
@@ -40,8 +45,60 @@ class DataStruct:
         self.text_to_send = ""
         self.df = get_data_from_db("areas")
         self.current_area_id = None
+        self.executed_areas = set()
+
+
+    def refresh_data(self):
+        self.df = get_data_from_db("areas")
+
+
+    def stop(self):
+
+        self.running = False
+
+
+    def run(self):
+
+        while self.running:
+
+            self.refresh_data()
+
+            active_areas = self.df[
+                (self.df['isActive'] == 1) &
+                (~self.df['id'].isin(list(self.executed_areas)))
+            ]
+            #active_areas = self.df[self.df['id'].isin([2,3,])]
+
+            if active_areas.empty:
+                time.sleep(1)
+                continue
+
+            for _, row in active_areas.iterrows():
+                if not self.running:
+                    break
+
+                area_id = row['id']
+                if area_id not in self.executed_areas:
+                    print(f"Processing area {area_id}")
+                    self.area_id = area_id
+                    self.parse_reaction_info(area_id)
+                    self.get_react_from_bd(area_id)
+                    self.get_trigger_n(area_id)
+                    self.get_react_n()
+                    self.trigger_react_1()
+                    print(f"Text: {self.text}")
+                    self.executed_areas.add(area_id)
+                    self.df.loc[self.df['id'] == area_id, 'isActive'] = 0
+
+            time.sleep(1)
+            self.refresh_data()
+            self.run()
+
+    def reset_execution_state(self):
+        self.executed_areas.clear()
 
     def convert_to_list(self, actions_list):
+
         ACTION_MAPPING = {
             "Deepl_1": 1,
             "Discord_1": 2,
@@ -99,7 +156,8 @@ class DataStruct:
         if not self.text_to_send and not self.discord_mess:
             print("No message to send")
             return False
-        print(self.text_to_send)
+        print("Sending message...")
+        print(self.discord_mess)
         message = self.text_to_send
 
         intents = discord.Intents.default()
@@ -119,12 +177,14 @@ class DataStruct:
 
         try:
             client.run(self.TOKEN_discord)
+            return True
         except Exception as e:
             print(f"Discord error: {e}")
             return False
 
 
     def detect_user_messages(self):
+
         self.user_to_detect = int(self.user_to_detect)
         intents = discord.Intents.default()
         intents.message_content = True
@@ -154,16 +214,19 @@ class DataStruct:
 
 
     def extract_hour(self, time_string):
+
         return int(time_string.split(':')[0])
 
 
     def is_raining(self):
+
         resultat = get_weather(self.city, self.api_key_weather)
         rain_1h = resultat["rain_1h"]
         return rain_1h > 0.5
 
 
     def is_sunset(self):
+
         resultat = get_weather(self.city, self.api_key_weather)
         sunset = resultat["sunset"]
         sunset_time = self.extract_hour(sunset)
@@ -172,95 +235,143 @@ class DataStruct:
 
 
     def multi_react(self):
+
         executed = set()
+        default_messages = {
+            1: "Message traduit",
+            2: "Action Discord déclenchée!",
+            3: "Voici vos playlists Spotify",
+            4: "Voici vos top tracks",
+            5: "Voici votre profil Spotify",
+            6: "Voici des recommandations de tracks",
+            7: "Voici des recommandations d'artistes",
+            8: "Voici les nouvelles sorties",
+            9: "Message Telegram"
+        }
+
         for i in self.react_n:
             if i in executed:
                 continue
 
+            if not self.text_to_send and not self.discord_mess:
+                self.text_to_send = default_messages.get(i, "Action déclenchée!")
+
             if i == 1:
+                print("Deepl")
                 if isinstance(self.text_to_send, str):
-                    self.text_to_send = translate_to(self.text_to_send, self.lang)
+                    self.text_to_send = translate_to(self.text, self.lang)
+                    print(self.text_to_send)
+                    print("fin de fonction")
                 elif isinstance(self.text_to_send, list):
-                    # Pour une liste de tuples, traduire chaque élément
                     translated_list = []
-                    for title, artist, album in self.text_to_send:
-                        translated_title = translate_to(title, self.lang)
-                        translated_list.append((translated_title, artist, album))
-                    self.text_to_send = translated_list
+                    for item in self.text_to_send:
+                        translated_item = translate_to(item, self.lang)
+                        translated_list.append(translated_item)
+                        self.text_to_send = translated_list
             elif i == 2:
+                print("Discord")
                 self.send_message()
             elif i == 3:
-                self.text_to_send = get_user_playlists()
+                playlists = get_user_playlists()
+                self.text_to_send = "Vos playlists Spotify:\n" + "\n".join([str(p) for p in playlists]) if playlists else default_messages[3]
             elif i == 4:
-                self.text_to_send = get_top_tracks("medium_term", 5)
+                top_tracks = get_top_tracks("medium_term", 5)
+                self.text_to_send = "Vos top tracks:\n" + "\n".join([str(t) for t in top_tracks]) if top_tracks else default_messages[4]
             elif i == 5:
-                self.text_to_send = get_user_profile()
+                profile = get_user_profile()
+                self.text_to_send = "Votre profil Spotify:\n" + str(profile) if profile else default_messages[5]
             elif i == 6:
-                self.text_to_send = get_track_recommendations(5)
+                recommendations = get_track_recommendations(5)
+                self.text_to_send = "Recommandations de tracks:\n" + "\n".join([str(r) for r in recommendations]) if recommendations else default_messages[6]
             elif i == 7:
-                self.text_to_send = get_artist_recommendations(5)
+                artist_recommendations = get_artist_recommendations(5)
+                self.text_to_send = "Recommandations d'artistes:\n" + "\n".join([str(a) for a in artist_recommendations]) if artist_recommendations else default_messages[7]
             elif i == 8:
-                self.text_to_send = explore_new_releases(5)
+                new_releases = explore_new_releases(5)
+                self.text_to_send = "Nouvelles sorties:\n" + "\n".join([str(r) for r in new_releases]) if new_releases else default_messages[8]
             elif i == 9:
                 print("Telegram")
+                self.text_to_send = default_messages[9]
 
             executed.add(i)
 
+
     def get_trigger_n(self, area_id):
+
         return self.get_data_trigger_from_bd(area_id)
 
 
     def get_react_n(self):
+
         if not all(1 <= n <= 9 for n in self.react_n):
             print("Invalid reaction number in the list")
         return self.react_n
+
 
     def get_streamer_name(self):
 
         area_data = self.df[self.df['id'] == self.area_id]
 
         if not area_data.empty:
-            print("deeefeff")
             self.streamer_name = area_data['action_1_info'].iloc[0]
         else:
             print("Aucune donnée trouvée pour cet ID")
 
 
     def trigger_selector(self):
+        self.get_streamer_name()
+        trigger_messages = {
+            1: "Le prix du Bitcoin a augmenté !",
+            2: f"Le streamer {self.streamer_name} est en live !",
+            3: "Un message a été détecté !",
+            4: "Il pleut !",
+            5: "C'est le coucher du soleil !"
+        }
+
         if self.trigger_n == 1:
-            while not check_btc_increase(0):
+            while not check_btc_increase(0) and self.running:
                 time.sleep(60)
-            return True
+            if self.running:
+                self.text_to_send = trigger_messages[1]
+            return self.running
         elif self.trigger_n == 2:
-            print("streamer_name")
             self.get_streamer_name()
-            while not is_streaming(self.streamer_name, self.client_id_twitch, self.client_secret_twitch, self.token_twitch):
+            while not is_streaming(self.streamer_name, self.client_id_twitch, self.client_secret_twitch, self.token_twitch) and self.running:
                 time.sleep(60)
-            return True
+            if self.running:
+                self.text_to_send = trigger_messages[2]
+            return self.running
         elif self.trigger_n == 3:
             return self.detect_user_messages()
         elif self.trigger_n == 4:
-            if not self.is_raining():
+            if not self.is_raining() and self.running:
                 time.sleep(3600)
-            return True
+            if self.running:
+                self.text_to_send = trigger_messages[4]
+            return self.running
         elif self.trigger_n == 5:
-            while not self.is_sunset():
+            while not self.is_sunset() and self.running:
                 time.sleep(600)
-            return True
+            if self.running:
+                self.text_to_send = trigger_messages[5]
+            return self.running
         return False
 
 
     def trigger_react_1(self):
+
         if self.trigger_selector():
             self.multi_react()
 
+
     def parse_reaction_info(self, area_id):
+
         try:
             area_data = self.df[self.df['id'] == area_id]
             if area_data.empty:
                 return
 
-            for i in range(1, 7):  # For reactions 1-6
+            for i in range(1, 7):
                 reaction_col = f'reaction_{i}'
                 info_col = f'reaction_{i}_info'
 
@@ -279,19 +390,21 @@ class DataStruct:
         except Exception as e:
             print(f"Error processing data: {e}")
 
-def main():
 
-    data = DataStruct()
-    active_areas = data.df[data.df['isActive'] == 1]
+def start_data_struct_thread():
 
-    for _, row in active_areas.iterrows():
-        data.area_id = row['id']
-        print(f"Processing area {data.area_id}")
-        data.parse_reaction_info(data.area_id)
-        data.get_react_from_bd(data.area_id)
-        data.get_trigger_n(data.area_id)
-        data.get_react_n()
-        data.trigger_react_1()
+    data_thread = DataStructThread()
+    data_thread.start()
+    return data_thread
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+
+    try:
+        data_thread = start_data_struct_thread()
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Shutting down...")
+        data_thread.stop()
+        data_thread.join()
+        print("Program terminated")
