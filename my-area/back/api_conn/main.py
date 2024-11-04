@@ -13,7 +13,17 @@ from coin_gecko import check_btc_increase
 from weather_api import get_weather
 from db_connect import get_active_actions, get_data_from_db
 import json
+import logging
+import os
 
+log_dir = 'logs'
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+logging.basicConfig(
+    filename=os.path.join(log_dir, 'data_struct.log'),
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 class DataStructThread(Thread):
 
@@ -53,21 +63,17 @@ class DataStructThread(Thread):
 
 
     def stop(self):
-
         self.running = False
 
 
     def run(self):
-
         while self.running:
-
             self.refresh_data()
 
             active_areas = self.df[
                 (self.df['isActive'] == 1) &
                 (~self.df['id'].isin(list(self.executed_areas)))
             ]
-            #active_areas = self.df[self.df['id'].isin([2,3,])]
 
             if active_areas.empty:
                 time.sleep(1)
@@ -79,14 +85,14 @@ class DataStructThread(Thread):
 
                 area_id = row['id']
                 if area_id not in self.executed_areas:
-                    print(f"Processing area {area_id}")
+                    logging.info(f"Processing area {area_id}")
                     self.area_id = area_id
                     self.parse_reaction_info(area_id)
                     self.get_react_from_bd(area_id)
                     self.get_trigger_n(area_id)
                     self.get_react_n()
                     self.trigger_react_1()
-                    print(f"Text: {self.text}")
+                    logging.info(f"Text: {self.text}")
                     self.executed_areas.add(area_id)
                     self.df.loc[self.df['id'] == area_id, 'isActive'] = 0
 
@@ -98,7 +104,6 @@ class DataStructThread(Thread):
         self.executed_areas.clear()
 
     def convert_to_list(self, actions_list):
-
         ACTION_MAPPING = {
             "Deepl_1": 1,
             "Discord_1": 2,
@@ -120,7 +125,6 @@ class DataStructThread(Thread):
 
 
     def get_react_from_bd(self, area_id):
-
         area_data = self.df[self.df['id'] == area_id]
         if not area_data.empty:
             actions = []
@@ -131,7 +135,6 @@ class DataStructThread(Thread):
 
 
     def get_data_trigger_from_bd(self, area_id):
-
         area_data = self.df[
             (self.df['id'] == area_id) &
             (self.df['isActive'] == 1)
@@ -152,12 +155,11 @@ class DataStructThread(Thread):
 
 
     def send_message(self):
-
         if not self.text_to_send and not self.discord_mess:
-            print("No message to send")
+            logging.warning("No message to send")
             return False
-        print("Sending message...")
-        print(self.discord_mess)
+        logging.info("Sending message...")
+        logging.info(self.discord_mess)
         message = self.text_to_send
 
         intents = discord.Intents.default()
@@ -179,12 +181,11 @@ class DataStructThread(Thread):
             client.run(self.TOKEN_discord)
             return True
         except Exception as e:
-            print(f"Discord error: {e}")
+            logging.error(f"Discord error: {e}")
             return False
 
 
     def detect_user_messages(self):
-
         self.user_to_detect = int(self.user_to_detect)
         intents = discord.Intents.default()
         intents.message_content = True
@@ -196,7 +197,7 @@ class DataStructThread(Thread):
                 self.message_detected = False
 
             async def on_ready(self):
-                print(f'Connecté en tant que {self.user}')
+                logging.info(f'Connected as {self.user}')
 
             async def on_message(self, message):
                 if message.author.id == self.user_to_detect:
@@ -209,24 +210,21 @@ class DataStructThread(Thread):
             client.run(self.TOKEN_discord)
             return client.message_detected
         except Exception as e:
-            print(f"An error occurred: {e}")
+            logging.error(f"An error occurred: {e}")
             return False
 
 
     def extract_hour(self, time_string):
-
         return int(time_string.split(':')[0])
 
 
     def is_raining(self):
-
         resultat = get_weather(self.city, self.api_key_weather)
         rain_1h = resultat["rain_1h"]
         return rain_1h > 0.5
 
 
     def is_sunset(self):
-
         resultat = get_weather(self.city, self.api_key_weather)
         sunset = resultat["sunset"]
         sunset_time = self.extract_hour(sunset)
@@ -235,7 +233,6 @@ class DataStructThread(Thread):
 
 
     def multi_react(self):
-
         executed = set()
         default_messages = {
             1: "Message traduit",
@@ -257,11 +254,11 @@ class DataStructThread(Thread):
                 self.text_to_send = default_messages.get(i, "Action déclenchée!")
 
             if i == 1:
-                print("Deepl")
+                logging.info("Deepl")
                 if isinstance(self.text_to_send, str):
                     self.text_to_send = translate_to(self.text, self.lang)
-                    print(self.text_to_send)
-                    print("fin de fonction")
+                    logging.info(self.text_to_send)
+                    logging.info("End of function")
                 elif isinstance(self.text_to_send, list):
                     translated_list = []
                     for item in self.text_to_send:
@@ -269,7 +266,7 @@ class DataStructThread(Thread):
                         translated_list.append(translated_item)
                         self.text_to_send = translated_list
             elif i == 2:
-                print("Discord")
+                logging.info("Discord")
                 self.send_message()
             elif i == 3:
                 playlists = get_user_playlists()
@@ -290,32 +287,29 @@ class DataStructThread(Thread):
                 new_releases = explore_new_releases(5)
                 self.text_to_send = "Nouvelles sorties:\n" + "\n".join([str(r) for r in new_releases]) if new_releases else default_messages[8]
             elif i == 9:
-                print("Telegram")
+                logging.info("Telegram")
                 self.text_to_send = default_messages[9]
 
             executed.add(i)
 
 
     def get_trigger_n(self, area_id):
-
         return self.get_data_trigger_from_bd(area_id)
 
 
     def get_react_n(self):
-
         if not all(1 <= n <= 9 for n in self.react_n):
-            print("Invalid reaction number in the list")
+            logging.warning("Invalid reaction number in the list")
         return self.react_n
 
 
     def get_streamer_name(self):
-
         area_data = self.df[self.df['id'] == self.area_id]
 
         if not area_data.empty:
             self.streamer_name = area_data['action_1_info'].iloc[0]
         else:
-            print("Aucune donnée trouvée pour cet ID")
+            logging.warning("No data found for this ID")
 
 
     def trigger_selector(self):
@@ -359,13 +353,11 @@ class DataStructThread(Thread):
 
 
     def trigger_react_1(self):
-
         if self.trigger_selector():
             self.multi_react()
 
 
     def parse_reaction_info(self, area_id):
-
         try:
             area_data = self.df[self.df['id'] == area_id]
             if area_data.empty:
@@ -388,11 +380,10 @@ class DataStructThread(Thread):
                             continue
 
         except Exception as e:
-            print(f"Error processing data: {e}")
+            logging.error(f"Error processing data: {e}")
 
 
 def start_data_struct_thread():
-
     data_thread = DataStructThread()
     data_thread.start()
     return data_thread
@@ -404,7 +395,7 @@ if __name__ == "__main__":
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("Shutting down...")
+        logging.info("Shutting down...")
         data_thread.stop()
         data_thread.join()
-        print("Program terminated")
+        logging.info("Program terminated")
