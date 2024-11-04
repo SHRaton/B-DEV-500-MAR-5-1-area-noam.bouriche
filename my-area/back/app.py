@@ -10,6 +10,7 @@ from database.add_area import add_area
 from scheduler import start_scheduler
 from email.mime.text import MIMEText
 from flask_cors import CORS
+from api_conn.main import DataStructThread
 import requests
 import sqlite3
 import smtplib
@@ -18,8 +19,6 @@ import random
 import string
 import time
 import os
-
-
 
 app = Flask(__name__)
 app.secret_key = 'ratonisthegoat'
@@ -896,4 +895,5 @@ def favicon():
     return '', 204
 
 if __name__ == '__main__':
+    DataStructThread().start()
     app.run(host='0.0.0.0', port=8080)
